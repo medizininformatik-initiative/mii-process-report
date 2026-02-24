@@ -1,5 +1,7 @@
 package de.medizininformatik_initiative.process.report;
 
+import org.hl7.fhir.r4.model.Coding;
+
 import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
 
 public interface ConstantsReport
@@ -42,6 +44,8 @@ public interface ConstantsReport
 	String BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR = "reportReceiveError";
 	String BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR_MESSAGE = "reportReceiveErrorMessage";
 	String BPMN_EXECUTION_VARIABLE_IS_DRY_RUN = "isDryRun";
+	String BPMN_EXECUTION_VARIABLE_REPORT_DISTRIBUTION = "reportDistribution";
+	String BPMN_EXECUTION_VARIABLE_REPORT_DISTRIBUTION_WAIT_AGGREGATE_TIMER_INTERVAL = "reportWaitBeforeAggregate";
 
 	String CODESYSTEM_REPORT = "http://medizininformatik-initiative.de/fhir/CodeSystem/report";
 	String CODESYSTEM_REPORT_VALUE_SEARCH_BUNDLE_RESPONSE_REFERENCE = "search-bundle-response-reference";
@@ -71,4 +75,8 @@ public interface ConstantsReport
 	String EXTENSION_REPORT_STATUS_ERROR_URL = "http://medizininformatik-initiative.de/fhir/StructureDefinition/extension-report-status-error";
 
 	String REPORT_TIMER_INTERVAL_DEFAULT_VALUE = "P7D";
+	String META_TAG_CODE_ORGANIZATION = "ORGANIZATION";
+
+	Coding DIC = new Coding("http://dsf.dev/fhir/CodeSystem/organization-role", "DIC", "Data Integration Center");
+
 }

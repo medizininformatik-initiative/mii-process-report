@@ -27,3 +27,7 @@ To use this repository in your code, add the Github Package Registry server to y
 
 ## License
 All code is published under the [Apache-2.0 License](LICENSE).
+
+```sh
+mvn net.revelc.code.formatter:formatter-maven-plugin:2.24.1:format net.revelc.code:impsort-maven-plugin:1.12.0:sort clean install -DskipTests=true
+```

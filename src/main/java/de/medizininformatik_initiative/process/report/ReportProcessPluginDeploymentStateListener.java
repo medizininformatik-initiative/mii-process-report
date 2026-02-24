@@ -27,15 +27,18 @@ public class ReportProcessPluginDeploymentStateListener
 	private final ProcessPluginApi api;
 
 	private final FhirClientFactory fhirClientFactory;
-
+	private final boolean reportDistributeAsBroker;
 	private final String resourcesVersion;
 	private final MetadataResourceConverter metadataResourceConverter;
 
+
 	public ReportProcessPluginDeploymentStateListener(ProcessPluginApi api, FhirClientFactory fhirClientFactory,
-			MetadataResourceConverter metadataResourceConverter, String resourcesVersion)
+			MetadataResourceConverter metadataResourceConverter, String resourcesVersion,
+			boolean reportDistributeAsBroker)
 	{
 		this.api = api;
 		this.fhirClientFactory = fhirClientFactory;
+		this.reportDistributeAsBroker = reportDistributeAsBroker;
 		this.metadataResourceConverter = metadataResourceConverter;
 		this.resourcesVersion = resourcesVersion;
 	}
@@ -64,7 +67,7 @@ public class ReportProcessPluginDeploymentStateListener
 				ConstantsReport.CODESYSTEM_REPORT_STATUS, CodeSystem.class,
 				this::filterCodeSystemsWithNonMatchingConceptCodes, this::adaptCodeSystemsReplacingConcepts);
 
-		if (activeProcesses.contains(ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND))
+		if (!reportDistributeAsBroker && activeProcesses.contains(ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND))
 		{
 			metadataResourceConverter.searchAndConvertOlderResourcesIfCurrentIsNewestResource(
 					ConstantsReport.VALUESET_REPORT_STATUS_SEND, ValueSet.class,
@@ -73,6 +76,7 @@ public class ReportProcessPluginDeploymentStateListener
 			updateDraftTaskReportSendStart();
 
 			fhirClientFactory.testConnection();
+
 		}
 	}
 

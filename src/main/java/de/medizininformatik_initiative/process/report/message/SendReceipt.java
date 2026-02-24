@@ -5,8 +5,11 @@ import java.util.stream.Stream;
 
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Task;
 import org.hl7.fhir.r4.model.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
@@ -14,15 +17,25 @@ import de.medizininformatik_initiative.process.report.util.ReportStatusGenerator
 import dev.dsf.bpe.v1.ProcessPluginApi;
 import dev.dsf.bpe.v1.activity.AbstractTaskMessageSend;
 import dev.dsf.bpe.v1.variables.Variables;
+import dev.dsf.fhir.client.FhirWebserviceClient;
 
 public class SendReceipt extends AbstractTaskMessageSend implements InitializingBean
 {
+	private static final Logger logger = LoggerFactory.getLogger(SendReceipt.class);
+
 	private final ReportStatusGenerator statusGenerator;
 
 	public SendReceipt(ProcessPluginApi api, ReportStatusGenerator statusGenerator)
 	{
 		super(api);
 		this.statusGenerator = statusGenerator;
+	}
+
+	@Override
+	protected IdType doSend(FhirWebserviceClient client, Task task)
+	{
+		logger.info("SendReceipt doSend");
+		return super.doSend(client, task);
 	}
 
 	@Override

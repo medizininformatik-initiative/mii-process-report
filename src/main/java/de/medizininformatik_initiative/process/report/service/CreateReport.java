@@ -66,6 +66,8 @@ public class CreateReport extends AbstractServiceDelegate implements Initializin
 	@Override
 	protected void doExecute(DelegateExecution execution, Variables variables)
 	{
+		logger.info("CreateReport doExecute");
+
 		Task task = variables.getStartTask();
 		Bundle searchBundle = variables.getResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE);
 		Target target = variables.getTarget();

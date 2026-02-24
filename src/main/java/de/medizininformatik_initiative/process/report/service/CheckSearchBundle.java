@@ -1,6 +1,10 @@
 package de.medizininformatik_initiative.process.report.service;
 
+import java.util.*;
 import java.util.Objects;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.hl7.fhir.r4.model.Bundle;
@@ -22,10 +26,16 @@ public class CheckSearchBundle extends AbstractServiceDelegate implements Initia
 
 	private final SearchQueryCheckService searchQueryCheckService;
 
-	public CheckSearchBundle(ProcessPluginApi api, SearchQueryCheckService searchQueryCheckService)
+	private boolean reportDistributeAsBroker;
+	private String reportWaitBeforeAggregate;
+
+	public CheckSearchBundle(ProcessPluginApi api, SearchQueryCheckService searchQueryCheckService,
+			boolean reportDistributeAsBroker, String reportWaitBeforeAggregate)
 	{
 		super(api);
 		this.searchQueryCheckService = searchQueryCheckService;
+		this.reportDistributeAsBroker = reportDistributeAsBroker;
+		this.reportWaitBeforeAggregate = reportWaitBeforeAggregate;
 	}
 
 	@Override
@@ -38,6 +48,8 @@ public class CheckSearchBundle extends AbstractServiceDelegate implements Initia
 	@Override
 	protected void doExecute(DelegateExecution execution, Variables variables)
 	{
+		logger.info("CheckSearchBundle doExecute");
+
 		Task task = variables.getStartTask();
 		Target target = variables.getTarget();
 		Bundle bundle = variables.getResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE);
@@ -45,6 +57,15 @@ public class CheckSearchBundle extends AbstractServiceDelegate implements Initia
 		logger.info("Checking downloaded search Bundle from HRP '{}' as part of Task with id '{}'",
 				target.getOrganizationIdentifierValue(), task.getId());
 
+		variables.setBoolean(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_DISTRIBUTION, reportDistributeAsBroker);
+		if (reportDistributeAsBroker)
+		{
+			logger.info("Initiate task for waiting for distributed results from other locations");
+		}
+		variables.setString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_DISTRIBUTION_WAIT_AGGREGATE_TIMER_INTERVAL,
+				reportWaitBeforeAggregate);
+		logger.info("Set the execution interval before the aggregation of the received reports starts to {}",
+				reportWaitBeforeAggregate);
 		try
 		{
 			searchQueryCheckService.checkBundle(bundle);

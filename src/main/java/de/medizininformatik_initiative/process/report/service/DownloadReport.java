@@ -43,6 +43,8 @@ public class DownloadReport extends AbstractServiceDelegate implements Initializ
 	@Override
 	protected void doExecute(DelegateExecution execution, Variables variables)
 	{
+		logger.info("DownloadReport doExecute");
+
 		Task task = variables.getStartTask();
 		IdType reportReference = getReportReference(task);
 

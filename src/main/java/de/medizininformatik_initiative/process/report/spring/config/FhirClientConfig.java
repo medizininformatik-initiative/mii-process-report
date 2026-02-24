@@ -240,7 +240,7 @@ public class FhirClientConfig
 			Path path = Paths.get(file);
 
 			if (!Files.isReadable(path))
-				throw new RuntimeException(path.toString() + " not readable");
+				throw new RuntimeException(path + " not readable");
 
 			return path;
 		}

@@ -45,6 +45,8 @@ public class InsertReport extends AbstractServiceDelegate implements Initializin
 	@Override
 	protected void doExecute(DelegateExecution execution, Variables variables)
 	{
+		logger.info("InsertReport doExecute");
+
 		Task task = variables.getStartTask();
 		String sendingOrganization = task.getRequester().getIdentifier().getValue();
 		Identifier reportIdentifier = getReportIdentifier(task);

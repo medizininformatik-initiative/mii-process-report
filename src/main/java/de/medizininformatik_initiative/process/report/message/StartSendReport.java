@@ -16,6 +16,7 @@ import dev.dsf.bpe.v1.variables.Variables;
 
 public class StartSendReport extends AbstractTaskMessageSend
 {
+
 	public StartSendReport(ProcessPluginApi api)
 	{
 		super(api);

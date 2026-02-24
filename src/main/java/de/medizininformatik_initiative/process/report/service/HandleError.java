@@ -2,6 +2,8 @@ package de.medizininformatik_initiative.process.report.service;
 
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.hl7.fhir.r4.model.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
@@ -11,6 +13,8 @@ import dev.dsf.bpe.v1.variables.Variables;
 
 public class HandleError extends AbstractServiceDelegate
 {
+	private static final Logger logger = LoggerFactory.getLogger(HandleError.class);
+
 	public HandleError(ProcessPluginApi api)
 	{
 		super(api);
@@ -19,6 +23,8 @@ public class HandleError extends AbstractServiceDelegate
 	@Override
 	protected void doExecute(DelegateExecution delegateExecution, Variables variables)
 	{
+		logger.info("HandleError doExecute");
+
 		Task task = variables.getStartTask();
 
 		if (Task.TaskStatus.FAILED.equals(task.getStatus()))

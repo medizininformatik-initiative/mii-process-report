@@ -12,6 +12,7 @@ import de.medizininformatik_initiative.process.report.ReportProcessPluginDeploym
 import de.medizininformatik_initiative.process.report.message.SendReceipt;
 import de.medizininformatik_initiative.process.report.message.SendReport;
 import de.medizininformatik_initiative.process.report.message.StartSendReport;
+import de.medizininformatik_initiative.process.report.service.*;
 import de.medizininformatik_initiative.process.report.service.CheckSearchBundle;
 import de.medizininformatik_initiative.process.report.service.CreateReport;
 import de.medizininformatik_initiative.process.report.service.DownloadReport;
@@ -45,6 +46,26 @@ public class ReportConfig
 	private String hrpIdentifier;
 
 	@ProcessDocumentation(processNames = {
+			"medizininformatik-initiativede_reportSend" }, description = "Parent organization for which the send process is running. Default: `medizininformatik-initiative.de`", example = "medizininformatik-initiative.de")
+	@Value("${edu.ubi.medfak.report.dsf.process.send.organization.identifier.value:medizininformatik-initiative.de}")
+	private String reportSendOrganizationIdentifier;
+
+	@ProcessDocumentation(processNames = {
+			"medizininformatik-initiativede_reportSend" }, description = "Parent organization for which the receive process is running. Default: `medizininformatik-initiative.de`", example = "medizininformatik-initiative.de")
+	@Value("${edu.ubi.medfak.report.dsf.process.receive.organization.identifier.value:medizininformatik-initiative.de}")
+	private String reportReceiveOrganizationIdentifier;
+
+	@ProcessDocumentation(processNames = {
+			"medizininformatik-initiativede_reportSend" }, description = "Enables the storage of the search bundle and the aggregation of reports instead of creating the report. Default ist `false`")
+	@Value("${edu.ubi.medfak.report.dsf.process.distribute.as.broker:false}")
+	private boolean reportDistributeAsBroker;
+
+	@ProcessDocumentation(processNames = {
+			"medizininformatik-initiativede_reportSend" }, description = "Execution interval before the aggregation of the received reports starts. Default: `P1D`", example = "P1D")
+	@Value("${edu.ubi.medfak.report.dsf.process.distribute.wait.aggregate.intervall:P1D}")
+	private String reportDistributeWaitInterval;
+
+	@ProcessDocumentation(processNames = {
 			"medizininformatik-initiativede_reportSend" }, description = "To enable asynchronous request pattern when executing search bundle requests set to `true`")
 	@Value("${de.medizininformatik.initiative.report.dic.fhir.server.async.enabled:false}")
 	private boolean fhirAsyncEnabled;
@@ -71,8 +92,9 @@ public class ReportConfig
 	public ProcessPluginDeploymentStateListener reportProcessPluginDeploymentStateListener()
 	{
 		String resourcesVersion = new ReportProcessPluginDefinition().getResourceVersion();
+
 		return new ReportProcessPluginDeploymentStateListener(api, fhirClientConfig.fhirClientFactory(),
-				metadataResourceConverter(), resourcesVersion);
+				metadataResourceConverter(), resourcesVersion, reportDistributeAsBroker);
 	}
 
 	// reportAutostart Process
@@ -97,7 +119,7 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public SelectTargetHrp selectTargetHrp()
 	{
-		return new SelectTargetHrp(api, hrpIdentifier);
+		return new SelectTargetHrp(api, hrpIdentifier, reportSendOrganizationIdentifier);
 	}
 
 	@Bean
@@ -112,8 +134,10 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public CheckSearchBundle checkSearchBundle()
 	{
-		return new CheckSearchBundle(api, searchQueryCheckService());
+		return new CheckSearchBundle(api, searchQueryCheckService(), reportDistributeAsBroker,
+				reportDistributeWaitInterval);
 	}
+
 
 	@Bean
 	@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
@@ -152,6 +176,20 @@ public class ReportConfig
 		return new StoreReceipt(api, reportStatusGenerator());
 	}
 
+	@Bean
+	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+	public StoreSearchBundle storeSearchBundle()
+	{
+		return new StoreSearchBundle(api);
+	}
+
+	@Bean
+	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+	public AggregateReports aggregateReports()
+	{
+		return new AggregateReports(api, hrpIdentifier, reportReceiveOrganizationIdentifier);
+	}
+
 	// reportReceive Process
 
 	@Bean
@@ -179,7 +217,7 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public SelectTargetDic selectTargetDic()
 	{
-		return new SelectTargetDic(api);
+		return new SelectTargetDic(api, reportReceiveOrganizationIdentifier);
 	}
 
 	@Bean
