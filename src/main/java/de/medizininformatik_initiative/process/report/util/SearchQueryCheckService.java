@@ -22,16 +22,21 @@ public class SearchQueryCheckService
 	private static final String DATE_EQUALITY_FILTER = "eq";
 
 	private static final String CAPABILITY_STATEMENT_PATH = "metadata";
+
 	private static final String SUMMARY_SEARCH_PARAM = "_summary";
 	private static final String SUMMARY_SEARCH_PARAM_VALUE_COUNT = "count";
+
+	private static final String CATEGORY_SEARCH_PARAM = "category";
+	private static final String CLASS_SEARCH_PARAM = "class";
 	private static final String TYPE_SEARCH_PARAM = "type";
 
 	private static final Set<String> ALL_RESOURCE_TYPES = EnumSet.allOf(ResourceType.class).stream()
 			.map(ResourceType::name).collect(Collectors.toSet());
 
-	private static final List<String> DATE_SEARCH_PARAMS = List.of("date", "recorded-date", "onset-date", "effective",
-			"effective-time", "authored", "collected", "issued", "period", "location-period", "occurrence");
-	private static final List<String> TOKEN_SEARCH_PARAMS = List.of("code", "ingredient-code", "type");
+	private static final List<String> DATE_SEARCH_PARAMS = List.of("authored", "collected", "date", "effective",
+			"effective-time", "issued", "location-period", "occurrence", "onset-date", "period", "recorded-date");
+	private static final List<String> TOKEN_SEARCH_PARAMS = List.of("category", "class", "code", "ingredient-code",
+			"type");
 	private static final List<String> OTHER_SEARCH_PARAMS = List.of("_profile", "_summary");
 	private static final List<String> VALID_SEARCH_PARAMS = Stream
 			.of(DATE_SEARCH_PARAMS.stream(), TOKEN_SEARCH_PARAMS.stream(), OTHER_SEARCH_PARAMS.stream()).flatMap(s -> s)
@@ -160,7 +165,7 @@ public class SearchQueryCheckService
 		List<Map.Entry<String, String>> erroneousDateFilters = dateParams.stream()
 				.filter(e -> !e.getValue().startsWith(DATE_EQUALITY_FILTER)).toList();
 
-		if (erroneousDateFilters.size() > 0)
+		if (!erroneousDateFilters.isEmpty())
 			throw new RuntimeException(
 					"Search Bundle contains date search params not starting with 'eq' - [" + erroneousDateFilters
 							.stream().map(e -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",")) + "]");
@@ -168,7 +173,7 @@ public class SearchQueryCheckService
 		List<Map.Entry<String, String>> erroneousDateValues = dateParams.stream()
 				.filter(e -> !YEAR_ONLY.matcher(e.getValue().replace(DATE_EQUALITY_FILTER, "")).matches()).toList();
 
-		if (erroneousDateValues.size() > 0)
+		if (!erroneousDateValues.isEmpty())
 			throw new RuntimeException(
 					"Search Bundle contains date search params not limited to a year - [" + erroneousDateValues.stream()
 							.map(e -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",")) + "]");
@@ -186,19 +191,20 @@ public class SearchQueryCheckService
 				.filter(e -> TOKEN_SEARCH_PARAMS.contains(MODIFIERS.matcher(e.getKey()).replaceAll("")))
 				.flatMap(e -> e.getValue().stream().map(v -> Map.entry(e.getKey(), v))).toList();
 
-		// Exemption for Encounter.type token params
+		// Exception for type, category and class token params
 		List<Map.Entry<String, String>> erroneousCodeValues = codeParams.stream()
 				.filter(e -> !e.getValue().endsWith("|"))
-				.filter(e -> !isEncounterType(uriComponents.getPath(), e.getKey())).toList();
+				.filter(e -> !isValidException(uriComponents.getPath(), e.getKey())).toList();
 
-		if (erroneousCodeValues.size() > 0)
+		if (!erroneousCodeValues.isEmpty())
 			throw new RuntimeException(
 					"Search Bundle contains code search params not limited to system - [" + erroneousCodeValues.stream()
 							.map(e -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",")) + "]");
 	}
 
-	private boolean isEncounterType(String path, String paramName)
+	private boolean isValidException(String path, String paramName)
 	{
-		return TYPE_SEARCH_PARAM.equals(paramName) && ResourceType.Encounter.name().equals(path);
+		return TYPE_SEARCH_PARAM.equals(paramName) || CLASS_SEARCH_PARAM.equals(paramName)
+				|| CATEGORY_SEARCH_PARAM.equals(paramName);
 	}
 }
