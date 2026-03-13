@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Task;
 import org.slf4j.Logger;
@@ -13,66 +12,55 @@ import org.springframework.beans.factory.InitializingBean;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.process.report.util.ReportStatusGenerator;
-import de.medizininformatik_initiative.processes.common.fhir.client.logging.DataLogger;
 import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
-import dev.dsf.bpe.v1.ProcessPluginApi;
-import dev.dsf.bpe.v1.activity.AbstractServiceDelegate;
-import dev.dsf.bpe.v1.variables.Target;
-import dev.dsf.bpe.v1.variables.Variables;
-import dev.dsf.fhir.client.BasicFhirWebserviceClient;
+import dev.dsf.bpe.v2.ProcessPluginApi;
+import dev.dsf.bpe.v2.activity.ServiceTask;
+import dev.dsf.bpe.v2.client.dsf.BasicDsfClient;
+import dev.dsf.bpe.v2.client.dsf.DelayStrategy;
+import dev.dsf.bpe.v2.variables.Target;
+import dev.dsf.bpe.v2.variables.Variables;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
-public class DownloadSearchBundle extends AbstractServiceDelegate implements InitializingBean
+public class DownloadSearchBundle implements ServiceTask, InitializingBean
 {
 	private static final Logger logger = LoggerFactory.getLogger(DownloadSearchBundle.class);
 
 	private final ReportStatusGenerator statusGenerator;
-	private final DataLogger dataLogger;
 
-	private final String processVersion;
-
-	public DownloadSearchBundle(ProcessPluginApi api, ReportStatusGenerator statusGenerator, DataLogger dataLogger,
-			String processVersion)
+	public DownloadSearchBundle(ReportStatusGenerator statusGenerator)
 	{
-		super(api);
-
 		this.statusGenerator = statusGenerator;
-		this.dataLogger = dataLogger;
-		this.processVersion = processVersion;
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception
 	{
-		super.afterPropertiesSet();
-
 		Objects.requireNonNull(statusGenerator, "statusGenerator");
-		Objects.requireNonNull(dataLogger, "dataLogger");
-		Objects.requireNonNull(processVersion, "processVersion");
 	}
 
 	@Override
-	protected void doExecute(DelegateExecution execution, Variables variables)
+	public void execute(ProcessPluginApi api, Variables variables)
 	{
 		Task task = variables.getStartTask();
 		Target target = variables.getTarget();
 		String searchBundleIdentifier = ConstantsReport.NAMINGSYSTEM_SEARCH_BUNDLE_IDENTIFIER + "|"
-				+ ConstantsReport.NAMINGSYSTEM_SEARCH_BUNDLE_IDENTIFIER_VALUE_PREFIX + processVersion;
+				+ ConstantsReport.NAMINGSYSTEM_SEARCH_BUNDLE_IDENTIFIER_VALUE_PREFIX
+				+ api.getProcessPluginDefinition().getResourceVersion();
 
 		logger.info("Downloading search Bundle '{}' from HRP '{}' for Task with id '{}'", searchBundleIdentifier,
 				target.getOrganizationIdentifierValue(), task.getId());
 
 		try
 		{
-			Bundle bundle = searchSearchBundle(target, searchBundleIdentifier);
-			dataLogger.logResource("Search Response", bundle);
+			Bundle bundle = searchSearchBundle(api, target, searchBundleIdentifier);
+			api.getDataLogger().log("Search Response", bundle);
 
 			Bundle searchBundle = extractSearchBundle(bundle, searchBundleIdentifier,
 					target.getOrganizationIdentifierValue(), task.getId());
-			dataLogger.logResource("Search Bundle", searchBundle);
+			api.getDataLogger().log("Search Bundle", searchBundle);
 
-			variables.setResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE, searchBundle);
+			variables.setFhirResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE, searchBundle);
 		}
 		catch (Exception exception)
 		{
@@ -100,11 +88,11 @@ public class DownloadSearchBundle extends AbstractServiceDelegate implements Ini
 		}
 	}
 
-	private Bundle searchSearchBundle(Target target, String searchBundleIdentifier)
+	private Bundle searchSearchBundle(ProcessPluginApi api, Target target, String searchBundleIdentifier)
 	{
-		BasicFhirWebserviceClient client = api.getFhirWebserviceClientProvider()
-				.getWebserviceClient(target.getEndpointUrl())
-				.withRetry(ConstantsBase.DSF_CLIENT_RETRY_6_TIMES, ConstantsBase.DSF_CLIENT_RETRY_INTERVAL_5MIN);
+		BasicDsfClient client = api.getDsfClientProvider().getByEndpointUrl(target.getEndpointUrl()).withRetry(
+				ConstantsBase.DSF_CLIENT_RETRY_6_TIMES,
+				DelayStrategy.constant(ConstantsBase.DSF_CLIENT_RETRY_INTERVAL_5MIN));
 
 		return client.searchWithStrictHandling(Bundle.class,
 				Map.of("identifier", Collections.singletonList(searchBundleIdentifier)));

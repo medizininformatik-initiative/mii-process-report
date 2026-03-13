@@ -1,31 +1,29 @@
 package de.medizininformatik_initiative.process.report.service;
 
-import org.camunda.bpm.engine.delegate.DelegateExecution;
-import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Endpoint;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Task;
 
 import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
-import dev.dsf.bpe.v1.ProcessPluginApi;
-import dev.dsf.bpe.v1.activity.AbstractServiceDelegate;
-import dev.dsf.bpe.v1.constants.NamingSystems;
-import dev.dsf.bpe.v1.variables.Target;
-import dev.dsf.bpe.v1.variables.Variables;
+import dev.dsf.bpe.v2.ProcessPluginApi;
+import dev.dsf.bpe.v2.activity.ServiceTask;
+import dev.dsf.bpe.v2.constants.CodeSystems;
+import dev.dsf.bpe.v2.constants.NamingSystems;
+import dev.dsf.bpe.v2.variables.Target;
+import dev.dsf.bpe.v2.variables.Variables;
 
-public class SelectTargetDic extends AbstractServiceDelegate
+public class SelectTargetDic implements ServiceTask
 {
-	public SelectTargetDic(ProcessPluginApi api)
+	public SelectTargetDic()
 	{
-		super(api);
 	}
 
 	@Override
-	protected void doExecute(DelegateExecution execution, Variables variables)
+	public void execute(ProcessPluginApi api, Variables variables)
 	{
 		Task task = variables.getStartTask();
 		Identifier dicIdentifier = getDicOrganizationIdentifier(task);
-		Endpoint dicEndpoint = getDicEndpoint(dicIdentifier);
+		Endpoint dicEndpoint = getDicEndpoint(api, dicIdentifier);
 		Target dicTarget = createTarget(variables, dicIdentifier, dicEndpoint);
 
 		variables.setTarget(dicTarget);
@@ -36,13 +34,11 @@ public class SelectTargetDic extends AbstractServiceDelegate
 		return task.getRequester().getIdentifier();
 	}
 
-	private Endpoint getDicEndpoint(Identifier dicIdentifier)
+	private Endpoint getDicEndpoint(ProcessPluginApi api, Identifier dicIdentifier)
 	{
-		Identifier parentIdentifier = NamingSystems.OrganizationIdentifier.withValue(
-				ConstantsBase.NAMINGSYSTEM_DSF_ORGANIZATION_IDENTIFIER_MEDICAL_INFORMATICS_INITIATIVE_CONSORTIUM);
-		Coding role = new Coding().setSystem(ConstantsBase.CODESYSTEM_DSF_ORGANIZATION_ROLE)
-				.setCode(ConstantsBase.CODESYSTEM_DSF_ORGANIZATION_ROLE_VALUE_DIC);
-		return api.getEndpointProvider().getEndpoint(parentIdentifier, dicIdentifier, role)
+		return api.getEndpointProvider().getEndpoint(NamingSystems.OrganizationIdentifier.withValue(
+				ConstantsBase.NAMINGSYSTEM_DSF_ORGANIZATION_IDENTIFIER_MEDICAL_INFORMATICS_INITIATIVE_CONSORTIUM),
+				dicIdentifier, CodeSystems.OrganizationRole.dic())
 				.orElseThrow(() -> new RuntimeException(
 						"Could not find default endpoint of organization '" + dicIdentifier.getValue() + "'"));
 	}

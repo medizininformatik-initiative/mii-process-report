@@ -1,9 +1,8 @@
 package de.medizininformatik_initiative.process.report.message;
 
+import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
-import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Task;
 import org.hl7.fhir.r4.model.Type;
@@ -11,63 +10,70 @@ import org.springframework.beans.factory.InitializingBean;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.process.report.util.ReportStatusGenerator;
-import dev.dsf.bpe.v1.ProcessPluginApi;
-import dev.dsf.bpe.v1.activity.AbstractTaskMessageSend;
-import dev.dsf.bpe.v1.variables.Variables;
+import de.medizininformatik_initiative.processes.common.activity.RetryTaskSender;
+import dev.dsf.bpe.v2.ProcessPluginApi;
+import dev.dsf.bpe.v2.activity.MessageEndEvent;
+import dev.dsf.bpe.v2.activity.task.TaskSender;
+import dev.dsf.bpe.v2.activity.values.SendTaskValues;
+import dev.dsf.bpe.v2.variables.Target;
+import dev.dsf.bpe.v2.variables.Variables;
 
-public class SendReceipt extends AbstractTaskMessageSend implements InitializingBean
+public class SendReceipt implements MessageEndEvent, InitializingBean
 {
 	private final ReportStatusGenerator statusGenerator;
 
-	public SendReceipt(ProcessPluginApi api, ReportStatusGenerator statusGenerator)
+	public SendReceipt(ReportStatusGenerator statusGenerator)
 	{
-		super(api);
 		this.statusGenerator = statusGenerator;
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception
 	{
-		super.afterPropertiesSet();
 		Objects.requireNonNull(statusGenerator, "reportStatusGenerator");
 	}
 
 	@Override
-	protected Stream<Task.ParameterComponent> getAdditionalInputParameters(DelegateExecution execution,
-			Variables variables)
+	public TaskSender getTaskSender(ProcessPluginApi api, Variables variables, SendTaskValues sendTaskValues)
+	{
+		return new RetryTaskSender(api, variables, sendTaskValues, getBusinessKeyStrategy(),
+				(target) -> getAdditionalInputParameters(api, variables, sendTaskValues, target));
+	}
+
+	@Override
+	public List<Task.ParameterComponent> getAdditionalInputParameters(ProcessPluginApi api, Variables variables,
+			SendTaskValues sendTaskValues, Target target)
 	{
 		if (variables.getString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR) != null)
-			return createReceiptError(variables);
+			return createReceiptError(api, variables);
 		else
-			return createReceiptOk();
+			return createReceiptOk(api);
 	}
 
-	private Stream<Task.ParameterComponent> createReceiptError(Variables variables)
+	private List<Task.ParameterComponent> createReceiptError(ProcessPluginApi api, Variables variables)
 	{
 		return statusGenerator.transformOutputToInputComponent(variables.getStartTask())
-				.map(this::receiveToReceiptStatus);
+				.map(cp -> receiveToReceiptStatus(api, cp)).toList();
 	}
 
-	private Task.ParameterComponent receiveToReceiptStatus(Task.ParameterComponent parameterComponent)
+	private Task.ParameterComponent receiveToReceiptStatus(ProcessPluginApi api,
+			Task.ParameterComponent parameterComponent)
 	{
 		Type value = parameterComponent.getValue();
 		if (value instanceof Coding coding
 				&& ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR.equals(coding.getCode()))
 		{
-			coding.setCode(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_ERROR);
+			coding.setCode(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_ERROR)
+					.setVersion(api.getProcessPluginDefinition().getResourceVersion());
 		}
 
 		return parameterComponent;
 	}
 
-	private Stream<Task.ParameterComponent> createReceiptOk()
+	private List<Task.ParameterComponent> createReceiptOk(ProcessPluginApi api)
 	{
-		Task.ParameterComponent parameterComponent = new Task.ParameterComponent();
-		parameterComponent.getType().addCoding().setSystem(ConstantsReport.CODESYSTEM_REPORT)
-				.setCode(ConstantsReport.CODESYSTEM_REPORT_VALUE_REPORT_STATUS);
-		parameterComponent.setValue(new Coding().setSystem(ConstantsReport.CODESYSTEM_REPORT_STATUS)
-				.setCode(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK));
-
-		return Stream.of(parameterComponent);
+		return List
+				.of(statusGenerator.createReportStatusInput(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK,
+						api.getProcessPluginDefinition().getResourceVersion()));
 	}
 }

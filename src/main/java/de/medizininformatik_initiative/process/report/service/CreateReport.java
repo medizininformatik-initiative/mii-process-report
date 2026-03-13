@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.hl7.fhir.r4.model.IdType;
@@ -22,65 +21,54 @@ import org.springframework.beans.factory.InitializingBean;
 
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import de.medizininformatik_initiative.process.report.ConstantsReport;
-import de.medizininformatik_initiative.processes.common.fhir.client.FhirClientFactory;
-import de.medizininformatik_initiative.processes.common.fhir.client.logging.DataLogger;
 import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
-import dev.dsf.bpe.v1.ProcessPluginApi;
-import dev.dsf.bpe.v1.activity.AbstractServiceDelegate;
-import dev.dsf.bpe.v1.variables.Target;
-import dev.dsf.bpe.v1.variables.Variables;
-import dev.dsf.fhir.client.PreferReturnMinimal;
+import dev.dsf.bpe.v2.ProcessPluginApi;
+import dev.dsf.bpe.v2.activity.ServiceTask;
+import dev.dsf.bpe.v2.client.dsf.DelayStrategy;
+import dev.dsf.bpe.v2.client.dsf.DsfClient;
+import dev.dsf.bpe.v2.client.dsf.PreferReturnMinimal;
+import dev.dsf.bpe.v2.variables.Target;
+import dev.dsf.bpe.v2.variables.Variables;
+import jakarta.ws.rs.WebApplicationException;
 
-public class CreateReport extends AbstractServiceDelegate implements InitializingBean
+public class CreateReport implements ServiceTask, InitializingBean
 {
 	private static final Logger logger = LoggerFactory.getLogger(CreateReport.class);
 
 	private static final String RESPONSE_OK = "200";
 
-	private final String resourceVersion;
-	private final FhirClientFactory fhirClientFactory;
-	private final boolean fhirAsyncRequestsEnabled;
-	private final DataLogger dataLogger;
+	private final String fhirStoreId;
 
-	public CreateReport(ProcessPluginApi api, String resourceVersion, FhirClientFactory fhirClientFactory,
-			boolean fhirAsyncRequestsEnabled, DataLogger dataLogger)
+	public CreateReport(String fhirStoreId)
 	{
-		super(api);
-
-		this.resourceVersion = resourceVersion;
-		this.fhirClientFactory = fhirClientFactory;
-		this.fhirAsyncRequestsEnabled = fhirAsyncRequestsEnabled;
-		this.dataLogger = dataLogger;
+		this.fhirStoreId = fhirStoreId;
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception
 	{
-		super.afterPropertiesSet();
-
-		Objects.requireNonNull(resourceVersion, "resourceVersion");
-		Objects.requireNonNull(fhirClientFactory, "fhirClientFactory");
-		Objects.requireNonNull(dataLogger, "dataLogger");
+		Objects.requireNonNull(fhirStoreId, "fhirStoreId");
 	}
 
 	@Override
-	protected void doExecute(DelegateExecution execution, Variables variables)
+	public void execute(ProcessPluginApi api, Variables variables)
 	{
 		Task task = variables.getStartTask();
-		Bundle searchBundle = variables.getResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE);
+		Bundle searchBundle = variables.getFhirResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE);
 		Target target = variables.getTarget();
 		boolean isDryRun = variables.getBoolean(ConstantsReport.BPMN_EXECUTION_VARIABLE_IS_DRY_RUN);
 
 		try
 		{
-			Bundle responseBundle = executeSearchBundle(searchBundle, target.getOrganizationIdentifierValue());
+			DsfClient client = getDsfClient(api);
+			Bundle responseBundle = executeSearchBundle(client, searchBundle, target.getOrganizationIdentifierValue());
 
-			Bundle reportBundle = transformToReportBundle(searchBundle, responseBundle, target, isDryRun);
-			dataLogger.logResource("Report Bundle", reportBundle);
+			Bundle reportBundle = transformToReportBundle(api, searchBundle, responseBundle, target, isDryRun);
+			api.getDataLogger().log("Report Bundle", reportBundle);
 
 			checkReportBundle(searchBundle, reportBundle, target.getOrganizationIdentifierValue());
 
-			String reportReference = storeReportBundle(reportBundle, target.getOrganizationIdentifierValue(),
+			String reportReference = storeReportBundle(api, reportBundle, target.getOrganizationIdentifierValue(),
 					task.getId());
 			variables.setString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE_RESPONSE_REFERENCE,
 					reportReference);
@@ -94,11 +82,17 @@ public class CreateReport extends AbstractServiceDelegate implements Initializin
 		}
 	}
 
-	private Bundle executeSearchBundle(Bundle searchBundle, String hrpIdentifier)
+	private DsfClient getDsfClient(ProcessPluginApi api)
+	{
+		return api.getDsfClientProvider().getById(fhirStoreId)
+				.orElseThrow(() -> new RuntimeException("DSF FHIR Client with ID '" + fhirStoreId + "' not found"));
+	}
+
+	private Bundle executeSearchBundle(DsfClient client, Bundle searchBundle, String hrpIdentifier)
 	{
 		logger.info(
 				"Executing search Bundle from HRP '{}' against FHIR store with base URL '{}' - this could take a while...",
-				hrpIdentifier, fhirClientFactory.getFhirBaseUrl());
+				hrpIdentifier, client.getBaseUrl());
 
 		Bundle responseBundle = new Bundle();
 		responseBundle.setType(Bundle.BundleType.BATCHRESPONSE);
@@ -106,26 +100,24 @@ public class CreateReport extends AbstractServiceDelegate implements Initializin
 		searchBundle.getEntry().stream().filter(Bundle.BundleEntryComponent::hasRequest)
 				.map(Bundle.BundleEntryComponent::getRequest)
 				.filter(r -> r.hasUrl() && r.hasMethod() && Bundle.HTTPVerb.GET.equals(r.getMethod()))
-				.map(Bundle.BundleEntryRequestComponent::getUrl).map(this::executeRequest)
+				.map(Bundle.BundleEntryRequestComponent::getUrl).map(url -> executeRequest(client, url))
 				.forEach(responseBundle::addEntry);
 
 		return responseBundle;
 	}
 
-	private Bundle.BundleEntryComponent executeRequest(String url)
+	private Bundle.BundleEntryComponent executeRequest(DsfClient client, String url)
 	{
 		Bundle.BundleEntryComponent entry = new Bundle.BundleEntryComponent();
 
 		try
 		{
-			logger.debug("Executing report search request '{}' with {}", url,
-					fhirAsyncRequestsEnabled ? "async request pattern" : "normal request pattern");
-			Resource result = doExecuteRequest(url);
+			Resource result = client.searchAsync(url).get();
 
 			entry.setResource(result);
 			entry.setResponse(new Bundle.BundleEntryResponseComponent().setStatus(RESPONSE_OK));
 		}
-		catch (BaseServerResponseException exception)
+		catch (Exception exception)
 		{
 			logger.warn("Could not execute report search request '{}' - {}", url, exception.getMessage());
 
@@ -133,7 +125,7 @@ public class CreateReport extends AbstractServiceDelegate implements Initializin
 			outcome.addIssue().setSeverity(OperationOutcome.IssueSeverity.ERROR)
 					.setCode(OperationOutcome.IssueType.EXCEPTION).setDiagnostics(exception.getMessage());
 			Bundle.BundleEntryResponseComponent response = new Bundle.BundleEntryResponseComponent()
-					.setStatus(String.valueOf(exception.getStatusCode())).setOutcome(outcome);
+					.setStatus(getStatusCode(exception)).setOutcome(outcome);
 
 			entry.setResponse(response);
 		}
@@ -141,19 +133,24 @@ public class CreateReport extends AbstractServiceDelegate implements Initializin
 		return entry;
 	}
 
-	private Resource doExecuteRequest(String url)
+	private String getStatusCode(Exception exception)
 	{
-		if (fhirAsyncRequestsEnabled)
-			return fhirClientFactory.getAsyncFhirClient().search(url);
-		else
-			return fhirClientFactory.getStandardFhirClient().search(url);
+		return switch (exception)
+		{
+			case WebApplicationException e -> String.valueOf(e.getResponse().getStatus());
+			case BaseServerResponseException e -> String.valueOf(e.getStatusCode());
+
+			default -> "400";
+		};
 	}
 
-	private Bundle transformToReportBundle(Bundle searchBundle, Bundle responseBundle, Target target, boolean isDryRun)
+	private Bundle transformToReportBundle(ProcessPluginApi api, Bundle searchBundle, Bundle responseBundle,
+			Target target, boolean isDryRun)
 	{
 		Bundle report = new Bundle();
 		report.setMeta(responseBundle.getMeta());
-		report.getMeta().addProfile(ConstantsReport.PROFILE_REPORT_SEARCH_BUNDLE_RESPONSE + "|" + resourceVersion);
+		report.getMeta().addProfile(ConstantsReport.PROFILE_REPORT_SEARCH_BUNDLE_RESPONSE + "|"
+				+ api.getProcessPluginDefinition().getResourceVersion());
 		report.getMeta().setLastUpdated(new Date());
 		report.setType(responseBundle.getType());
 
@@ -199,8 +196,7 @@ public class CreateReport extends AbstractServiceDelegate implements Initializin
 
 		if (responseEntry.getResource() instanceof Bundle responseEntryBundle)
 		{
-			if (fhirAsyncRequestsEnabled)
-				responseEntryBundle = flattenBundle(responseEntryBundle);
+			responseEntryBundle = flattenBundle(responseEntryBundle);
 			reportEntryBundle.setTotal(responseEntryBundle.getTotal());
 			reportEntryBundle.getMeta().setLastUpdated(responseEntryBundle.getMeta().getLastUpdated());
 		}
@@ -268,20 +264,21 @@ public class CreateReport extends AbstractServiceDelegate implements Initializin
 	{
 		int requests = searchBundle.getEntry().size();
 
-		List<String> errorCodes = reportBundle.getEntry().stream().filter(e -> e.hasResponse())
-				.map(e -> e.getResponse()).filter(r -> r.hasStatus()).map(r -> r.getStatus())
-				.filter(s -> !s.contains(RESPONSE_OK)).toList();
+		List<String> errorCodes = reportBundle.getEntry().stream().filter(Bundle.BundleEntryComponent::hasResponse)
+				.map(Bundle.BundleEntryComponent::getResponse).filter(Bundle.BundleEntryResponseComponent::hasStatus)
+				.map(Bundle.BundleEntryResponseComponent::getStatus).filter(s -> !s.contains(RESPONSE_OK)).toList();
 
 		if (errorCodes.size() >= requests)
 			throw new RuntimeException(
 					"Report Bundle for HRP '" + hrpIdentifier + "' only contains error status codes");
 	}
 
-	private String storeReportBundle(Bundle responseBundle, String hrpIdentifier, String taskId)
+	private String storeReportBundle(ProcessPluginApi api, Bundle responseBundle, String hrpIdentifier, String taskId)
 	{
-		PreferReturnMinimal client = api.getFhirWebserviceClientProvider().getLocalWebserviceClient()
-				.withMinimalReturn()
-				.withRetry(ConstantsBase.DSF_CLIENT_RETRY_6_TIMES, ConstantsBase.DSF_CLIENT_RETRY_INTERVAL_5MIN);
+
+		PreferReturnMinimal client = api.getDsfClientProvider().getLocal().withMinimalReturn().withRetry(
+				ConstantsBase.DSF_CLIENT_RETRY_6_TIMES,
+				DelayStrategy.constant(ConstantsBase.DSF_CLIENT_RETRY_INTERVAL_5MIN));
 
 		String localOrganizationIdentifier = api.getOrganizationProvider().getLocalOrganizationIdentifierValue()
 				.orElseThrow(() -> new RuntimeException("LocalOrganizationIdentifierValue empty"));

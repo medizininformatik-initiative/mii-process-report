@@ -4,8 +4,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-import org.camunda.bpm.engine.delegate.BpmnError;
-import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
@@ -18,54 +16,56 @@ import org.springframework.beans.factory.InitializingBean;
 import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.process.report.util.ReportStatusGenerator;
 import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
-import dev.dsf.bpe.v1.ProcessPluginApi;
-import dev.dsf.bpe.v1.activity.AbstractServiceDelegate;
-import dev.dsf.bpe.v1.variables.Variables;
-import dev.dsf.fhir.client.PreferReturnMinimal;
+import dev.dsf.bpe.v2.ProcessPluginApi;
+import dev.dsf.bpe.v2.activity.ServiceTask;
+import dev.dsf.bpe.v2.client.dsf.DelayStrategy;
+import dev.dsf.bpe.v2.client.dsf.PreferReturnMinimal;
+import dev.dsf.bpe.v2.error.ErrorBoundaryEvent;
+import dev.dsf.bpe.v2.service.MailService;
+import dev.dsf.bpe.v2.variables.Variables;
 
-public class InsertReport extends AbstractServiceDelegate implements InitializingBean
+public class InsertReport implements ServiceTask, InitializingBean
 {
 	private static final Logger logger = LoggerFactory.getLogger(InsertReport.class);
 
 	private final ReportStatusGenerator statusGenerator;
 
-	public InsertReport(ProcessPluginApi api, ReportStatusGenerator statusGenerator)
+	public InsertReport(ReportStatusGenerator statusGenerator)
 	{
-		super(api);
 		this.statusGenerator = statusGenerator;
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception
 	{
-		super.afterPropertiesSet();
 		Objects.requireNonNull(statusGenerator, "reportStatusGenerator");
 	}
 
 	@Override
-	protected void doExecute(DelegateExecution execution, Variables variables)
+	public void execute(ProcessPluginApi api, Variables variables)
 	{
 		Task task = variables.getStartTask();
 		String sendingOrganization = task.getRequester().getIdentifier().getValue();
 		Identifier reportIdentifier = getReportIdentifier(task);
 
-		Bundle report = variables.getResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE);
+		Bundle report = variables.getFhirResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE);
 		report.setId("").getMeta().setVersionId("").setTag(null);
 		report.setIdentifier(reportIdentifier);
 
 		api.getReadAccessHelper().addLocal(report);
 		api.getReadAccessHelper().addOrganization(report, task.getRequester().getIdentifier().getValue());
 
-		PreferReturnMinimal client = api.getFhirWebserviceClientProvider().getLocalWebserviceClient()
-				.withMinimalReturn()
-				.withRetry(ConstantsBase.DSF_CLIENT_RETRY_6_TIMES, ConstantsBase.DSF_CLIENT_RETRY_INTERVAL_5MIN);
+		PreferReturnMinimal client = api.getDsfClientProvider().getLocal().withMinimalReturn().withRetry(
+				ConstantsBase.DSF_CLIENT_RETRY_6_TIMES,
+				DelayStrategy.constant(ConstantsBase.DSF_CLIENT_RETRY_INTERVAL_5MIN));
 		try
 		{
 			IdType reportId = client.updateConditionaly(report, Map.of("identifier",
 					Collections.singletonList(reportIdentifier.getSystem() + "|" + reportIdentifier.getValue())));
 
-			task.addOutput(statusGenerator
-					.createReportStatusOutput(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_OK));
+			task.addOutput(
+					statusGenerator.createReportStatusOutput(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_OK,
+							api.getProcessPluginDefinition().getResourceVersion()));
 			variables.updateTask(task);
 
 			String absoluteReportId = new IdType(api.getEndpointProvider().getLocalEndpointAddress(),
@@ -73,7 +73,7 @@ public class InsertReport extends AbstractServiceDelegate implements Initializin
 
 			logger.info("Stored report with id '{}' from organization '{}' for Task with id '{}'", absoluteReportId,
 					sendingOrganization, task.getId());
-			sendMail(sendingOrganization, absoluteReportId);
+			sendMail(api.getMailService(), sendingOrganization, absoluteReportId);
 		}
 		catch (Exception exception)
 		{
@@ -84,7 +84,7 @@ public class InsertReport extends AbstractServiceDelegate implements Initializin
 
 			logger.warn("Storing report from organization '{}' for Task with id '{}' failed - {}", sendingOrganization,
 					task.getId(), exception.getMessage());
-			throw new BpmnError(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR,
+			throw new ErrorBoundaryEvent(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR,
 					"Insert report failed - " + exception.getMessage());
 		}
 	}
@@ -95,13 +95,13 @@ public class InsertReport extends AbstractServiceDelegate implements Initializin
 				.setValue(task.getRequester().getIdentifier().getValue());
 	}
 
-	private void sendMail(String sendingOrganization, String reportLocation)
+	private void sendMail(MailService mailService, String sendingOrganization, String reportLocation)
 	{
 		String subject = "New report stored in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_RECEIVE + "'";
 		String message = "A new report has been stored in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_RECEIVE
 				+ "' from organization '" + sendingOrganization + "' and can be accessed using the following link:\n"
 				+ "- " + reportLocation;
 
-		api.getMailService().send(subject, message);
+		mailService.send(subject, message);
 	}
 }

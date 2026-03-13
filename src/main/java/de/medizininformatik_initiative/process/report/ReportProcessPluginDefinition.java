@@ -4,13 +4,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import de.medizininformatik_initiative.process.report.spring.config.FhirClientConfig;
 import de.medizininformatik_initiative.process.report.spring.config.ReportConfig;
-import dev.dsf.bpe.v1.ProcessPluginDefinition;
+import dev.dsf.bpe.v2.ProcessPluginDefinition;
 
 public class ReportProcessPluginDefinition implements ProcessPluginDefinition
 {
-	public static final String VERSION = "1.3.0.0";
+	public static final String VERSION = "2.0.0.0";
 	public static final LocalDate RELEASE_DATE = LocalDate.of(2025, 9, 12);
 
 	@Override
@@ -40,7 +39,7 @@ public class ReportProcessPluginDefinition implements ProcessPluginDefinition
 	@Override
 	public List<Class<?>> getSpringConfigurations()
 	{
-		return List.of(ReportConfig.class, FhirClientConfig.class);
+		return List.of(ReportConfig.class);
 	}
 
 	public Map<String, List<String>> getFhirResourcesByProcessId()

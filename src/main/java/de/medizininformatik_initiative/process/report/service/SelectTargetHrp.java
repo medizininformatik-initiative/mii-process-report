@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.hl7.fhir.r4.model.BooleanType;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Endpoint;
@@ -17,55 +16,54 @@ import org.slf4j.LoggerFactory;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
-import dev.dsf.bpe.v1.ProcessPluginApi;
-import dev.dsf.bpe.v1.activity.AbstractServiceDelegate;
-import dev.dsf.bpe.v1.constants.NamingSystems;
-import dev.dsf.bpe.v1.variables.Target;
-import dev.dsf.bpe.v1.variables.Variables;
+import dev.dsf.bpe.v2.ProcessPluginApi;
+import dev.dsf.bpe.v2.activity.ServiceTask;
+import dev.dsf.bpe.v2.constants.CodeSystems;
+import dev.dsf.bpe.v2.constants.NamingSystems;
+import dev.dsf.bpe.v2.variables.Target;
+import dev.dsf.bpe.v2.variables.Variables;
 
-public class SelectTargetHrp extends AbstractServiceDelegate
+public class SelectTargetHrp implements ServiceTask
 {
 	private static final Logger logger = LoggerFactory.getLogger(SelectTargetHrp.class);
 
 	private final String hrpIdentifierEnvVariable;
 
-	public SelectTargetHrp(ProcessPluginApi api, String hrpIdentifierEnvVariable)
+	public SelectTargetHrp(String hrpIdentifierEnvVariable)
 	{
-		super(api);
 		this.hrpIdentifierEnvVariable = hrpIdentifierEnvVariable;
 	}
 
 	@Override
-	protected void doExecute(DelegateExecution execution, Variables variables)
+	public void execute(ProcessPluginApi api, Variables variables)
 	{
 		Task startTask = variables.getStartTask();
 
 		Identifier parentIdentifier = NamingSystems.OrganizationIdentifier.withValue(
 				ConstantsBase.NAMINGSYSTEM_DSF_ORGANIZATION_IDENTIFIER_MEDICAL_INFORMATICS_INITIATIVE_CONSORTIUM);
-		Coding hrpRole = new Coding().setSystem(ConstantsBase.CODESYSTEM_DSF_ORGANIZATION_ROLE)
-				.setCode(ConstantsBase.CODESYSTEM_DSF_ORGANIZATION_ROLE_VALUE_HRP);
+		Coding hrpRole = CodeSystems.OrganizationRole.hrp();
 
 		// 1. use hrp-identifier provided from task, if not present
 		// 2. use hrp-identifier provided from ENV variable, if not present
 		// 3. search hrp-identifier for mii-parent-organization and use first found
-		String hrpIdentifier = extractHrpIdentifierFromTask(startTask)
+		String hrpIdentifier = extractHrpIdentifierFromTask(api, startTask)
 				.or(extractHrpIdentifierFromEnv(hrpIdentifierEnvVariable))
-				.orElse(searchHrpIdentifier(parentIdentifier, hrpRole, startTask));
+				.orElse(searchHrpIdentifier(api, parentIdentifier, hrpRole, startTask));
 
-		Endpoint endpoint = getHrpEndpoint(parentIdentifier, hrpIdentifier, hrpRole);
+		Endpoint endpoint = getHrpEndpoint(api, parentIdentifier, hrpIdentifier, hrpRole);
 		String endpointIdentifier = extractEndpointIdentifier(endpoint);
 
 		Target target = variables.createTarget(hrpIdentifier, endpointIdentifier, endpoint.getAddress());
 		variables.setTarget(target);
 
-		boolean isDryRun = isDryRun(variables);
+		boolean isDryRun = isDryRun(api, variables);
 		if (isDryRun)
 			logger.info("Creating new report as dry-run for HRP '{}'", hrpIdentifier);
 
 		variables.setBoolean(ConstantsReport.BPMN_EXECUTION_VARIABLE_IS_DRY_RUN, isDryRun);
 	}
 
-	private Optional<String> extractHrpIdentifierFromTask(Task task)
+	private Optional<String> extractHrpIdentifierFromTask(ProcessPluginApi api, Task task)
 	{
 		Optional<String> hrpIdentifier = api.getTaskHelper()
 				.getFirstInputParameterValue(task, ConstantsReport.CODESYSTEM_REPORT,
@@ -93,21 +91,21 @@ public class SelectTargetHrp extends AbstractServiceDelegate
 		};
 	}
 
-	private String searchHrpIdentifier(Identifier parentIdentifier, Coding hrpRole, Task task)
+	private String searchHrpIdentifier(ProcessPluginApi api, Identifier parentIdentifier, Coding hrpRole, Task task)
 	{
 		logger.debug(
 				"HRP not defined in Task with id '{}' or ENV variable - searching HRP for mii-consortium as report target",
 				task.getId());
 
-		Organization organization = getHrpOrganization(parentIdentifier, hrpRole);
+		Organization organization = getHrpOrganization(api, parentIdentifier, hrpRole);
 		return extractHrpIdentifierFromOrganization(organization);
 	}
 
-	private Organization getHrpOrganization(Identifier parentIdentifier, Coding role)
+	private Organization getHrpOrganization(ProcessPluginApi api, Identifier parentIdentifier, Coding role)
 	{
 		List<Organization> hrps = api.getOrganizationProvider().getOrganizations(parentIdentifier, role);
 
-		if (hrps.size() < 1)
+		if (hrps.isEmpty())
 			throw new RuntimeException("Could not find any organization with role '" + role.getCode()
 					+ "' and parent organization '" + parentIdentifier.getValue() + "'");
 
@@ -128,7 +126,8 @@ public class SelectTargetHrp extends AbstractServiceDelegate
 				.getValue();
 	}
 
-	private Endpoint getHrpEndpoint(Identifier parentIdentifier, String organizationIdentifierValue, Coding role)
+	private Endpoint getHrpEndpoint(ProcessPluginApi api, Identifier parentIdentifier,
+			String organizationIdentifierValue, Coding role)
 	{
 		Identifier organizationIdentifier = NamingSystems.OrganizationIdentifier.withValue(organizationIdentifierValue);
 		return api.getEndpointProvider().getEndpoint(parentIdentifier, organizationIdentifier, role)
@@ -144,7 +143,7 @@ public class SelectTargetHrp extends AbstractServiceDelegate
 						+ "' is missing identifier with system '" + NamingSystems.EndpointIdentifier.SID + "'"));
 	}
 
-	private boolean isDryRun(Variables variables)
+	private boolean isDryRun(ProcessPluginApi api, Variables variables)
 	{
 		return api.getTaskHelper()
 				.getFirstInputParameterValue(variables.getStartTask(), ConstantsReport.CODESYSTEM_REPORT,

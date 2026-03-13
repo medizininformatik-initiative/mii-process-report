@@ -2,7 +2,6 @@ package de.medizininformatik_initiative.process.report.service;
 
 import java.util.Objects;
 
-import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.hl7.fhir.r4.model.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,31 +9,30 @@ import org.springframework.beans.factory.InitializingBean;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.process.report.util.ReportStatusGenerator;
-import dev.dsf.bpe.v1.ProcessPluginApi;
-import dev.dsf.bpe.v1.activity.AbstractServiceDelegate;
-import dev.dsf.bpe.v1.variables.Variables;
+import dev.dsf.bpe.v2.ProcessPluginApi;
+import dev.dsf.bpe.v2.activity.ServiceTask;
+import dev.dsf.bpe.v2.service.MailService;
+import dev.dsf.bpe.v2.variables.Variables;
 
-public class LogDryRun extends AbstractServiceDelegate implements InitializingBean
+public class LogDryRun implements ServiceTask, InitializingBean
 {
 	private static final Logger logger = LoggerFactory.getLogger(LogDryRun.class);
 
 	private final ReportStatusGenerator statusGenerator;
 
-	public LogDryRun(ProcessPluginApi api, ReportStatusGenerator statusGenerator)
+	public LogDryRun(ReportStatusGenerator statusGenerator)
 	{
-		super(api);
 		this.statusGenerator = statusGenerator;
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception
 	{
-		super.afterPropertiesSet();
 		Objects.requireNonNull(statusGenerator, "statusGenerator");
 	}
 
 	@Override
-	protected void doExecute(DelegateExecution delegateExecution, Variables variables)
+	public void execute(ProcessPluginApi api, Variables variables)
 	{
 		String recipient = variables.getTarget().getOrganizationIdentifierValue();
 		String reportLocation = variables
@@ -42,12 +40,12 @@ public class LogDryRun extends AbstractServiceDelegate implements InitializingBe
 
 		logger.info("Report dry-run successful for HRP '{}' at '{}' and task with id '{}'", recipient, reportLocation,
 				variables.getStartTask().getId());
-		sendSuccessfulMail(recipient, reportLocation);
+		sendSuccessfulMail(api.getMailService(), recipient, reportLocation);
 
-		addOutputToStartTask(variables);
+		addOutputToStartTask(api, variables);
 	}
 
-	private void sendSuccessfulMail(String recipient, String reportLocation)
+	private void sendSuccessfulMail(MailService mailService, String recipient, String reportLocation)
 	{
 		String subject = "New successful dry-run report in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND
 				+ "'";
@@ -55,14 +53,14 @@ public class LogDryRun extends AbstractServiceDelegate implements InitializingBe
 				+ "' in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND
 				+ "' and can be accessed using the following link:\n" + "- " + reportLocation;
 
-		api.getMailService().send(subject, message);
+		mailService.send(subject, message);
 	}
 
-	private void addOutputToStartTask(Variables variables)
+	private void addOutputToStartTask(ProcessPluginApi api, Variables variables)
 	{
 		Task task = variables.getStartTask();
-		task.addOutput(
-				statusGenerator.createReportStatusOutput(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_DRY_RUN));
+		task.addOutput(statusGenerator.createReportStatusOutput(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_DRY_RUN,
+				api.getProcessPluginDefinition().getResourceVersion()));
 
 		variables.updateTask(task);
 	}

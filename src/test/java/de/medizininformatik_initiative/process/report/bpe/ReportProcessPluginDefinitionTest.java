@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.process.report.ReportProcessPluginDefinition;
-import dev.dsf.bpe.v1.ProcessPluginDefinition;
+import dev.dsf.bpe.v2.ProcessPluginDefinition;
 
 public class ReportProcessPluginDefinitionTest
 {
