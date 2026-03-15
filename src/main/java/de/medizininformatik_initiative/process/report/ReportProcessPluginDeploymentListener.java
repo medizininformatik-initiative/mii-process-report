@@ -25,7 +25,6 @@ public class ReportProcessPluginDeploymentListener implements ProcessPluginDeplo
 	public void afterPropertiesSet()
 	{
 		Objects.requireNonNull(api, "api");
-		Objects.requireNonNull(fhirStoreId, fhirStoreId);
 	}
 
 	@Override
@@ -38,8 +37,8 @@ public class ReportProcessPluginDeploymentListener implements ProcessPluginDeplo
 							() -> new RuntimeException("DSF FHIR Client with ID '" + fhirStoreId + "' not configured"))
 					.getConformance();
 
-			Objects.requireNonNull(conformance,
-					"Connection test for DSF FHIR Client with ID '" + fhirStoreId + "' failed - CapabilityStatement is null");
+			Objects.requireNonNull(conformance, "Connection test for DSF FHIR Client with ID '" + fhirStoreId
+					+ "' failed - CapabilityStatement is null");
 		}
 	}
 }
