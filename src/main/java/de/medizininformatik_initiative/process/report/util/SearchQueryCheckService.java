@@ -23,6 +23,7 @@ public class SearchQueryCheckService
 	private static final Pattern MODIFIERS = Pattern.compile(":.*");
 	private static final Pattern YEAR_ONLY = Pattern.compile("\\b20\\d{2}(?!\\S)");
 	private static final String DATE_EQUALITY_FILTER = "eq";
+	private static final String DATE_AFTER_FILTER = "sa";
 
 	private static final String CAPABILITY_STATEMENT_PATH = "metadata";
 
@@ -31,6 +32,8 @@ public class SearchQueryCheckService
 
 	private static final String CATEGORY_SEARCH_PARAM = "category";
 	private static final String CLASS_SEARCH_PARAM = "class";
+	private static final String MII_PROVISION_PROVISION_CODE_TYPE_SEARCH_PARAM = "mii-provision-provision-code-type";
+	private static final String STATUS_SEARCH_PARAM = "status";
 	private static final String TYPE_SEARCH_PARAM = "type";
 
 	private static final Set<String> ALL_RESOURCE_TYPES = EnumSet.allOf(ResourceType.class).stream()
@@ -39,7 +42,7 @@ public class SearchQueryCheckService
 	private static final List<String> DATE_SEARCH_PARAMS = List.of("authored", "collected", "date", "effective",
 			"effective-time", "issued", "location-period", "occurrence", "onset-date", "period", "recorded-date");
 	private static final List<String> TOKEN_SEARCH_PARAMS = List.of("category", "class", "code", "ingredient-code",
-			"type");
+			"mii-provision-provision-code-type", "status", "type");
 	private static final List<String> OTHER_SEARCH_PARAMS = List.of("_profile", "_summary");
 	private static final List<String> VALID_SEARCH_PARAMS = Stream
 			.of(DATE_SEARCH_PARAMS.stream(), TOKEN_SEARCH_PARAMS.stream(), OTHER_SEARCH_PARAMS.stream()).flatMap(s -> s)
@@ -183,8 +186,9 @@ public class SearchQueryCheckService
 				.filter(e -> DATE_SEARCH_PARAMS.contains(MODIFIERS.matcher(e.getKey()).replaceAll("")))
 				.flatMap(e -> e.getValue().stream().map(v -> Map.entry(e.getKey(), v))).toList();
 
-		List<Map.Entry<String, String>> erroneousDateFilters = dateParams.stream()
-				.filter(e -> !e.getValue().startsWith(DATE_EQUALITY_FILTER)).toList();
+		List<Map.Entry<String, String>> erroneousDateFilters = dateParams.stream().filter(
+				e -> !e.getValue().startsWith(DATE_EQUALITY_FILTER) && !e.getValue().startsWith(DATE_AFTER_FILTER))
+				.toList();
 
 		if (!erroneousDateFilters.isEmpty())
 			throw new RuntimeException(
@@ -192,7 +196,10 @@ public class SearchQueryCheckService
 							.stream().map(e -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",")) + "]");
 
 		List<Map.Entry<String, String>> erroneousDateValues = dateParams.stream()
-				.filter(e -> !YEAR_ONLY.matcher(e.getValue().replace(DATE_EQUALITY_FILTER, "")).matches()).toList();
+				.filter(e -> !YEAR_ONLY
+						.matcher(e.getValue().replace(DATE_EQUALITY_FILTER, "").replace(DATE_AFTER_FILTER, ""))
+						.matches())
+				.toList();
 
 		if (!erroneousDateValues.isEmpty())
 			throw new RuntimeException(
@@ -213,6 +220,8 @@ public class SearchQueryCheckService
 				.flatMap(e -> e.getValue().stream().map(v -> Map.entry(e.getKey(), v))).toList();
 
 		// Filter predefined exceptions token params
+		// TODO: split by "," check each repetition
+		// TODO: add test where one repetition does not end with "|" and has no exception for the parameter defined
 		List<Map.Entry<String, String>> erroneousCodeValues = codeParams.stream()
 				.filter(e -> !e.getValue().endsWith("|")).filter(e -> !isValidException(e.getKey())).toList();
 
@@ -224,7 +233,8 @@ public class SearchQueryCheckService
 
 	private boolean isValidException(String paramName)
 	{
-		return TYPE_SEARCH_PARAM.equals(paramName) || CLASS_SEARCH_PARAM.equals(paramName)
-				|| CATEGORY_SEARCH_PARAM.equals(paramName);
+		return CATEGORY_SEARCH_PARAM.equals(paramName) || CLASS_SEARCH_PARAM.equals(paramName)
+				|| MII_PROVISION_PROVISION_CODE_TYPE_SEARCH_PARAM.equals(paramName)
+				|| STATUS_SEARCH_PARAM.equals(paramName) || TYPE_SEARCH_PARAM.equals(paramName);
 	}
 }

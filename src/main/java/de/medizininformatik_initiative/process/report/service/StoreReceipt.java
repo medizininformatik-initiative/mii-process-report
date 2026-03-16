@@ -23,10 +23,12 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 	private static final Logger logger = LoggerFactory.getLogger(StoreReceipt.class);
 
 	private final ReportStatusGenerator statusGenerator;
+	private final boolean dicEmailEnabled;
 
-	public StoreReceipt(ReportStatusGenerator statusGenerator)
+	public StoreReceipt(ReportStatusGenerator statusGenerator, boolean dicEmailEnabled)
 	{
 		this.statusGenerator = statusGenerator;
+		this.dicEmailEnabled = dicEmailEnabled;
 	}
 
 	@Override
@@ -98,13 +100,17 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 		if (ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK.equals(code))
 		{
 			logger.info("Task with id '{}' has report-status code '{}' for HRP '{}'", startTaskId, code, hrpIdentifier);
-			sendSuccessfulMail(api.getMailService(), reportLocation, code, hrpIdentifier);
+
+			if (dicEmailEnabled)
+				sendSuccessfulMail(api.getMailService(), reportLocation, code, hrpIdentifier);
 		}
 		else
 		{
 			logger.warn("Task with id '{}' has report-status code '{}'{} for HRP '{}'", startTaskId, code, errorLog,
 					hrpIdentifier);
-			sendErrorMail(api.getMailService(), startTaskId, reportLocation, code, error, hrpIdentifier);
+
+			if (dicEmailEnabled)
+				sendErrorMail(api.getMailService(), startTaskId, reportLocation, code, error, hrpIdentifier);
 		}
 	}
 

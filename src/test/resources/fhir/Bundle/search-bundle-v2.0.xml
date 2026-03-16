@@ -244,7 +244,7 @@
 	<entry>
 		<request>
 			<method value='GET'/>
-			<url value='Consent?_profile:below=https://www.medizininformatik-initiative.de/fhir/modul-consent/StructureDefinition/mii-pr-consent-einwilligung&amp;category=https://www.medizininformatik-initiative.de/fhir/modul-consent/CodeSystem/mii-cs-consent-version-modules|2.16.840.1.113883.3.1937.777.24.2.184&amp;_summary=count'/>
+			<url value='Consent?_profile:below=https://www.medizininformatik-initiative.de/fhir/modul-consent/StructureDefinition/mii-pr-consent-einwilligung&amp;category=https://www.medizininformatik-initiative.de/fhir/modul-consent/CodeSystem/mii-cs-consent-version-modules|2.16.840.1.113883.3.1937.777.24.2.184,https://www.medizininformatik-initiative.de/fhir/modul-consent/CodeSystem/mii-cs-consent-consent_category|2.16.840.1.113883.3.1937.777.24.2.184&amp;mii-provision-provision-code-type=urn:oid:2.16.840.1.113883.3.1937.777.24.5.3|2.16.840.1.113883.3.1937.777.24.5.3.8$permit&amp;status=active&amp;_summary=count'/>
 		</request>
 	</entry>
 	<entry>
@@ -742,7 +742,7 @@
 	<entry>
 		<request>
 			<method value='GET'/>
-			<url value='Encounter?_profile:below=https://www.medizininformatik-initiative.de/fhir/core/modul-fall/StructureDefinition/KontaktGesundheitseinrichtung&amp;type=http://fhir.de/CodeSystem/Kontaktebene|einrichtungskontakt&amp;class=IMP&amp;_summary=count'/>
+			<url value='Encounter?date=sa2025&amp;_profile:below=https://www.medizininformatik-initiative.de/fhir/core/modul-fall/StructureDefinition/KontaktGesundheitseinrichtung&amp;type=http://fhir.de/CodeSystem/Kontaktebene|einrichtungskontakt&amp;class=IMP&amp;_summary=count'/>
 		</request>
 	</entry>
 	<entry>

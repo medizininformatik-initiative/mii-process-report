@@ -43,6 +43,16 @@ public class ReportConfig
 	@Value("${de.medizininformatik.initiative.report.dic.fhir.server.id:#{null}}")
 	private String fhirStoreId;
 
+	@ProcessDocumentation(processNames = {
+			"medizininformatik-initiativede_reportSend" }, description = "To receive e-mails as dic, set to `true`")
+	@Value("${de.medizininformatik.initiative.report.dic.email.enabled:false}")
+	private boolean dicEmailEnabled;
+
+	@ProcessDocumentation(processNames = {
+			"medizininformatik-initiativede_reportReceive" }, description = "To receive e-mails as hrp, set to `true`")
+	@Value("${de.medizininformatik.initiative.report.hrp.email.enabled:false}")
+	private boolean hrpEmailEnabled;
+
 	// all Processes
 
 	@Bean
@@ -116,7 +126,7 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public LogDryRun logDryRun()
 	{
-		return new LogDryRun(reportStatusGenerator());
+		return new LogDryRun(reportStatusGenerator(), dicEmailEnabled);
 	}
 
 	@Bean
@@ -130,7 +140,7 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public StoreReceipt storeReceipt()
 	{
-		return new StoreReceipt(reportStatusGenerator());
+		return new StoreReceipt(reportStatusGenerator(), dicEmailEnabled);
 	}
 
 	// reportReceive Process
@@ -146,14 +156,14 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public InsertReport insertReport()
 	{
-		return new InsertReport(reportStatusGenerator());
+		return new InsertReport(reportStatusGenerator(), hrpEmailEnabled);
 	}
 
 	@Bean
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public HandleError handleError()
 	{
-		return new HandleError();
+		return new HandleError(hrpEmailEnabled);
 	}
 
 	@Bean

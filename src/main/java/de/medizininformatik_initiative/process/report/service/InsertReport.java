@@ -29,10 +29,12 @@ public class InsertReport implements ServiceTask, InitializingBean
 	private static final Logger logger = LoggerFactory.getLogger(InsertReport.class);
 
 	private final ReportStatusGenerator statusGenerator;
+	private final boolean hrpEmailEnabled;
 
-	public InsertReport(ReportStatusGenerator statusGenerator)
+	public InsertReport(ReportStatusGenerator statusGenerator, boolean hrpEmailEnabled)
 	{
 		this.statusGenerator = statusGenerator;
+		this.hrpEmailEnabled = hrpEmailEnabled;
 	}
 
 	@Override
@@ -73,7 +75,9 @@ public class InsertReport implements ServiceTask, InitializingBean
 
 			logger.info("Stored report with id '{}' from organization '{}' for Task with id '{}'", absoluteReportId,
 					sendingOrganization, task.getId());
-			sendMail(api.getMailService(), sendingOrganization, absoluteReportId);
+
+			if (hrpEmailEnabled)
+				sendMail(api.getMailService(), sendingOrganization, absoluteReportId);
 		}
 		catch (Exception exception)
 		{

@@ -12,8 +12,11 @@ import dev.dsf.bpe.v2.variables.Variables;
 
 public class HandleError implements ServiceTask
 {
-	public HandleError()
+	private final boolean hrpEmailEnabled;
+
+	public HandleError(boolean hrpEmailEnabled)
 	{
+		this.hrpEmailEnabled = hrpEmailEnabled;
 	}
 
 	@Override
@@ -23,7 +26,9 @@ public class HandleError implements ServiceTask
 
 		if (Task.TaskStatus.FAILED.equals(task.getStatus()))
 		{
-			sendMail(api.getMailService(), task, variables);
+			if (hrpEmailEnabled)
+				sendMail(api.getMailService(), task, variables);
+
 			api.getDsfClientProvider().getLocal().withRetry(ConstantsBase.DSF_CLIENT_RETRY_6_TIMES,
 					DelayStrategy.constant(ConstantsBase.DSF_CLIENT_RETRY_INTERVAL_5MIN)).update(task);
 		}

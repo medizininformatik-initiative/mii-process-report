@@ -19,10 +19,12 @@ public class LogDryRun implements ServiceTask, InitializingBean
 	private static final Logger logger = LoggerFactory.getLogger(LogDryRun.class);
 
 	private final ReportStatusGenerator statusGenerator;
+	private final boolean dicEmailEnabled;
 
-	public LogDryRun(ReportStatusGenerator statusGenerator)
+	public LogDryRun(ReportStatusGenerator statusGenerator, boolean dicEmailEnabled)
 	{
 		this.statusGenerator = statusGenerator;
+		this.dicEmailEnabled = dicEmailEnabled;
 	}
 
 	@Override
@@ -40,7 +42,9 @@ public class LogDryRun implements ServiceTask, InitializingBean
 
 		logger.info("Report dry-run successful for HRP '{}' at '{}' and task with id '{}'", recipient, reportLocation,
 				variables.getStartTask().getId());
-		sendSuccessfulMail(api.getMailService(), recipient, reportLocation);
+
+		if (dicEmailEnabled)
+			sendSuccessfulMail(api.getMailService(), recipient, reportLocation);
 
 		addOutputToStartTask(api, variables);
 	}
