@@ -45,8 +45,9 @@ public class SearchQueryCheckService
 	private static final List<String> TOKEN_SEARCH_PARAMS = List.of("category", "class", "code", "ingredient-code",
 			"mii-provision-provision-code-type", "status", "type");
 	private static final List<String> OTHER_SEARCH_PARAMS = List.of("_profile", "_summary");
-	private static final List<String> VALID_SEARCH_PARAMS = Stream.of(DATE_SEARCH_PARAMS.stream(),
-			TOKEN_SEARCH_PARAMS.stream(), OTHER_SEARCH_PARAMS.stream()).flatMap(s -> s).toList();
+	private static final List<String> VALID_SEARCH_PARAMS = Stream
+			.of(DATE_SEARCH_PARAMS.stream(), TOKEN_SEARCH_PARAMS.stream(), OTHER_SEARCH_PARAMS.stream()).flatMap(s -> s)
+			.toList();
 
 	public void checkBundle(Bundle bundle)
 	{
@@ -158,12 +159,14 @@ public class SearchQueryCheckService
 
 		Map<String, List<String>> map = new HashMap<>();
 
-		for (String param : query.split("&")) {
+		for (String param : query.split("&"))
+		{
 			String[] parts = param.split("=", 2);
 			String key = parts[0];
 			String value = parts.length > 1 ? parts[1] : "";
 
-			for (String v : value.split(",")) {
+			for (String v : value.split(","))
+			{
 				map.computeIfAbsent(key, k -> new ArrayList<>()).add(v);
 			}
 		}
@@ -193,21 +196,24 @@ public class SearchQueryCheckService
 
 	private void testSearchParamDateValues(String query)
 	{
-		List<Map.Entry<String, String>> dateParams = getKeyValueEntries(query).filter(
-						e -> DATE_SEARCH_PARAMS.contains(MODIFIERS.matcher(e.getKey()).replaceAll("")))
+		List<Map.Entry<String, String>> dateParams = getKeyValueEntries(query)
+				.filter(e -> DATE_SEARCH_PARAMS.contains(MODIFIERS.matcher(e.getKey()).replaceAll("")))
 				.flatMap(e -> e.getValue().stream().map(v -> Map.entry(e.getKey(), v))).toList();
 
-		List<Map.Entry<String, String>> erroneousDateFilters = dateParams.stream()
-				.filter(e -> !e.getValue().startsWith(DATE_EQUALITY_FILTER) && !e.getValue()
-						.startsWith(DATE_AFTER_FILTER)).toList();
+		List<Map.Entry<String, String>> erroneousDateFilters = dateParams.stream().filter(
+				e -> !e.getValue().startsWith(DATE_EQUALITY_FILTER) && !e.getValue().startsWith(DATE_AFTER_FILTER))
+				.toList();
 
 		if (!erroneousDateFilters.isEmpty())
-			throw new RuntimeException("Search Bundle contains date search params not starting with 'eq' - ["
-					+ erroneousDateFilters.stream().map(e -> e.getKey() + ":" + e.getValue())
-					.collect(Collectors.joining(",")) + "]");
+			throw new RuntimeException(
+					"Search Bundle contains date search params not starting with 'eq' - [" + erroneousDateFilters
+							.stream().map(e -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",")) + "]");
 
-		List<Map.Entry<String, String>> erroneousDateValues = dateParams.stream().filter(e -> !YEAR_ONLY.matcher(
-				e.getValue().replace(DATE_EQUALITY_FILTER, "").replace(DATE_AFTER_FILTER, "")).matches()).toList();
+		List<Map.Entry<String, String>> erroneousDateValues = dateParams.stream()
+				.filter(e -> !YEAR_ONLY
+						.matcher(e.getValue().replace(DATE_EQUALITY_FILTER, "").replace(DATE_AFTER_FILTER, ""))
+						.matches())
+				.toList();
 
 		if (!erroneousDateValues.isEmpty())
 			throw new RuntimeException(
@@ -223,8 +229,8 @@ public class SearchQueryCheckService
 
 	private void testSearchParamTokenValues(String query)
 	{
-		List<Map.Entry<String, String>> codeParams = getKeyValueEntries(query).filter(
-						e -> TOKEN_SEARCH_PARAMS.contains(MODIFIERS.matcher(e.getKey()).replaceAll("")))
+		List<Map.Entry<String, String>> codeParams = getKeyValueEntries(query)
+				.filter(e -> TOKEN_SEARCH_PARAMS.contains(MODIFIERS.matcher(e.getKey()).replaceAll("")))
 				.flatMap(e -> e.getValue().stream().map(v -> Map.entry(e.getKey(), v))).toList();
 
 		List<Map.Entry<String, String>> erroneousCodeValues = codeParams.stream()
@@ -239,7 +245,7 @@ public class SearchQueryCheckService
 	private boolean isValidException(String paramName)
 	{
 		return CATEGORY_SEARCH_PARAM.equals(paramName) || CLASS_SEARCH_PARAM.equals(paramName)
-				|| MII_PROVISION_PROVISION_CODE_TYPE_SEARCH_PARAM.equals(paramName) || STATUS_SEARCH_PARAM.equals(
-				paramName) || TYPE_SEARCH_PARAM.equals(paramName);
+				|| MII_PROVISION_PROVISION_CODE_TYPE_SEARCH_PARAM.equals(paramName)
+				|| STATUS_SEARCH_PARAM.equals(paramName) || TYPE_SEARCH_PARAM.equals(paramName);
 	}
 }
