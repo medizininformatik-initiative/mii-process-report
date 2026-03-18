@@ -61,18 +61,6 @@
 		<!-- testing -->
 		<dependency>
 			<groupId>dev.dsf</groupId>
-			<artifactId>dsf-bpe-process-api-v2-impl</artifactId>
-			<version>${dsf.version}</version>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.junit.jupiter</groupId>
-					<artifactId>junit-jupiter</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>dev.dsf</groupId>
 			<artifactId>dsf-fhir-validation</artifactId>
 			<version>${dsf.version}</version>
 			<scope>test</scope>

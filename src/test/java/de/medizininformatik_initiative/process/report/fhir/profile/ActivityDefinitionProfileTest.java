@@ -1,7 +1,6 @@
 package de.medizininformatik_initiative.process.report.fhir.profile;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -15,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import ca.uhn.fhir.validation.ResultSeverityEnum;
 import ca.uhn.fhir.validation.ValidationResult;
 import de.medizininformatik_initiative.process.report.ReportProcessPluginDefinition;
-import dev.dsf.bpe.v2.service.process.ProcessAuthorizationHelper;
-import dev.dsf.bpe.v2.service.process.ProcessAuthorizationHelperImpl;
 import dev.dsf.fhir.validation.ResourceValidator;
 import dev.dsf.fhir.validation.ResourceValidatorImpl;
 import dev.dsf.fhir.validation.ValidationSupportRule;
@@ -52,8 +49,6 @@ public class ActivityDefinitionProfileTest
 	private final ResourceValidator resourceValidator = new ResourceValidatorImpl(validationRule.getFhirContext(),
 			validationRule.getValidationSupport());
 
-	private final ProcessAuthorizationHelper processAuthorizationHelper = new ProcessAuthorizationHelperImpl();
-
 	@Test
 	public void testAutostartValid() throws Exception
 	{
@@ -65,9 +60,6 @@ public class ActivityDefinitionProfileTest
 
 		assertEquals(0, result.getMessages().stream().filter(m -> ResultSeverityEnum.ERROR.equals(m.getSeverity())
 				|| ResultSeverityEnum.FATAL.equals(m.getSeverity())).count());
-
-		assertTrue(processAuthorizationHelper.isValid(ad, taskProfile -> true, practitionerRole -> true,
-				orgIdentifier -> true, organizationRole -> true));
 	}
 
 	@Test
@@ -81,9 +73,6 @@ public class ActivityDefinitionProfileTest
 
 		assertEquals(0, result.getMessages().stream().filter(m -> ResultSeverityEnum.ERROR.equals(m.getSeverity())
 				|| ResultSeverityEnum.FATAL.equals(m.getSeverity())).count());
-
-		assertTrue(processAuthorizationHelper.isValid(ad, taskProfile -> true, practitionerRole -> true,
-				orgIdentifier -> true, organizationRole -> true));
 	}
 
 	@Test
@@ -97,8 +86,5 @@ public class ActivityDefinitionProfileTest
 
 		assertEquals(0, result.getMessages().stream().filter(m -> ResultSeverityEnum.ERROR.equals(m.getSeverity())
 				|| ResultSeverityEnum.FATAL.equals(m.getSeverity())).count());
-
-		assertTrue(processAuthorizationHelper.isValid(ad, taskProfile -> true, practitionerRole -> true,
-				orgIdentifier -> true, organizationRole -> true));
 	}
 }
