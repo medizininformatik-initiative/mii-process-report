@@ -121,6 +121,18 @@ public class SearchBundleCheckServiceTest
 	}
 
 	@Test
+	public void testInvalidCodeOr1()
+	{
+		testInvalid("/fhir/Bundle/search-bundle-invalid-code-or1.xml", "not limited to system");
+	}
+
+	@Test
+	public void testInvalidCodeOr2()
+	{
+		testInvalid("/fhir/Bundle/search-bundle-invalid-code-or2.xml", "not limited to system");
+	}
+
+	@Test
 	public void testInvalidCodeIngredient()
 	{
 		testInvalid("/fhir/Bundle/search-bundle-invalid-code-ingredient.xml", "not limited to system");
