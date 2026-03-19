@@ -24,7 +24,6 @@ public class SearchQueryCheckService
 	private static final Pattern MODIFIERS = Pattern.compile(":.*");
 	private static final Pattern YEAR_ONLY = Pattern.compile("\\b20\\d{2}(?!\\S)");
 	private static final String DATE_EQUALITY_FILTER = "eq";
-	private static final String DATE_AFTER_FILTER = "sa";
 
 	private static final String CAPABILITY_STATEMENT_PATH = "metadata";
 
@@ -200,9 +199,8 @@ public class SearchQueryCheckService
 				.filter(e -> DATE_SEARCH_PARAMS.contains(MODIFIERS.matcher(e.getKey()).replaceAll("")))
 				.flatMap(e -> e.getValue().stream().map(v -> Map.entry(e.getKey(), v))).toList();
 
-		List<Map.Entry<String, String>> erroneousDateFilters = dateParams.stream().filter(
-				e -> !e.getValue().startsWith(DATE_EQUALITY_FILTER) && !e.getValue().startsWith(DATE_AFTER_FILTER))
-				.toList();
+		List<Map.Entry<String, String>> erroneousDateFilters = dateParams.stream()
+				.filter(e -> !e.getValue().startsWith(DATE_EQUALITY_FILTER)).toList();
 
 		if (!erroneousDateFilters.isEmpty())
 			throw new RuntimeException(
@@ -210,10 +208,7 @@ public class SearchQueryCheckService
 							.stream().map(e -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",")) + "]");
 
 		List<Map.Entry<String, String>> erroneousDateValues = dateParams.stream()
-				.filter(e -> !YEAR_ONLY
-						.matcher(e.getValue().replace(DATE_EQUALITY_FILTER, "").replace(DATE_AFTER_FILTER, ""))
-						.matches())
-				.toList();
+				.filter(e -> !YEAR_ONLY.matcher(e.getValue().replace(DATE_EQUALITY_FILTER, "")).matches()).toList();
 
 		if (!erroneousDateValues.isEmpty())
 			throw new RuntimeException(

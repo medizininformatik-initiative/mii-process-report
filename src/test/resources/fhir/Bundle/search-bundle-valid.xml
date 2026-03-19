@@ -742,7 +742,7 @@
 	<entry>
 		<request>
 			<method value='GET'/>
-			<url value='Encounter?date=sa2025&amp;_profile:below=https://www.medizininformatik-initiative.de/fhir/core/modul-fall/StructureDefinition/KontaktGesundheitseinrichtung&amp;type=http://fhir.de/CodeSystem/Kontaktebene|einrichtungskontakt&amp;class=IMP&amp;_summary=count'/>
+			<url value='Encounter?date=eq2025&amp;_profile:below=https://www.medizininformatik-initiative.de/fhir/core/modul-fall/StructureDefinition/KontaktGesundheitseinrichtung&amp;type=http://fhir.de/CodeSystem/Kontaktebene|einrichtungskontakt&amp;class=IMP&amp;_summary=count'/>
 		</request>
 	</entry>
 	<entry>
