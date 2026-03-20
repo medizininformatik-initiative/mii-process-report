@@ -1,10 +1,14 @@
 package de.medizininformatik_initiative.process.report.service;
 
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import org.hl7.fhir.r4.model.Bundle;
@@ -35,6 +39,7 @@ public class CreateReport implements ServiceTask, InitializingBean
 {
 	private static final Logger logger = LoggerFactory.getLogger(CreateReport.class);
 
+	private static final String PIPE_ENCODED = "%7C";
 	private static final String RESPONSE_OK = "200";
 
 	private final String fhirStoreId;
@@ -109,17 +114,19 @@ public class CreateReport implements ServiceTask, InitializingBean
 	private Bundle.BundleEntryComponent executeRequest(DsfClient client, String url)
 	{
 		Bundle.BundleEntryComponent entry = new Bundle.BundleEntryComponent();
+		String urlWithBase = URI.create(client.getBaseUrl())
+				.resolve(URLDecoder.decode(url, StandardCharsets.UTF_8).replace("|", PIPE_ENCODED)).toString();
 
 		try
 		{
-			Resource result = client.searchAsync(url).get();
+			Resource result = doExecuteRequest(client, urlWithBase);
 
 			entry.setResource(result);
 			entry.setResponse(new Bundle.BundleEntryResponseComponent().setStatus(RESPONSE_OK));
 		}
 		catch (Exception exception)
 		{
-			logger.warn("Could not execute report search request '{}' - {}", url, exception.getMessage());
+			logger.warn("Could not execute report search request '{}' - {}", urlWithBase, exception.getMessage());
 
 			OperationOutcome outcome = new OperationOutcome();
 			outcome.addIssue().setSeverity(OperationOutcome.IssueSeverity.ERROR)
@@ -131,6 +138,15 @@ public class CreateReport implements ServiceTask, InitializingBean
 		}
 
 		return entry;
+	}
+
+	private Resource doExecuteRequest(DsfClient client, String urlWithBase)
+			throws ExecutionException, InterruptedException
+	{
+		if (urlWithBase.contains("metadata"))
+			return client.getConformance();
+		else
+			return client.searchAsync(urlWithBase).get();
 	}
 
 	private String getStatusCode(Exception exception)

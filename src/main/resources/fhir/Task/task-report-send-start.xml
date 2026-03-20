@@ -39,6 +39,7 @@
 		<type>
 			<coding>
 				<system value="http://medizininformatik-initiative.de/fhir/CodeSystem/report" />
+				<version value="#{version}"/>
 				<code value="hrp-identifier" />
 			</coding>
 		</type>
@@ -54,6 +55,7 @@
 		<type>
 			<coding>
 				<system value="http://medizininformatik-initiative.de/fhir/CodeSystem/report" />
+				<version value="#{version}"/>
 				<code value="dry-run" />
 			</coding>
 		</type>

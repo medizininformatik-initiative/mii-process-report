@@ -10,6 +10,7 @@ import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.processes.common.activity.RetryTaskSender;
 import dev.dsf.bpe.v2.ProcessPluginApi;
 import dev.dsf.bpe.v2.activity.MessageIntermediateThrowEvent;
+import dev.dsf.bpe.v2.activity.task.BusinessKeyStrategies;
 import dev.dsf.bpe.v2.activity.task.TaskSender;
 import dev.dsf.bpe.v2.activity.values.SendTaskValues;
 import dev.dsf.bpe.v2.variables.Target;
@@ -24,7 +25,7 @@ public class StartSendReport implements MessageIntermediateThrowEvent
 	@Override
 	public TaskSender getTaskSender(ProcessPluginApi api, Variables variables, SendTaskValues sendTaskValues)
 	{
-		return new RetryTaskSender(api, variables, sendTaskValues, getBusinessKeyStrategy(),
+		return new RetryTaskSender(api, variables, sendTaskValues, BusinessKeyStrategies.NEW,
 				(target) -> getAdditionalInputParameters(api, variables, sendTaskValues, target));
 	}
 
