@@ -32,6 +32,7 @@ import dev.dsf.fhir.validation.ValidationSupportRule;
 public class TaskProfileTest
 {
 	private static final Logger logger = LoggerFactory.getLogger(TaskProfileTest.class);
+
 	private static final ReportProcessPluginDefinition def = new ReportProcessPluginDefinition();
 
 	@ClassRule

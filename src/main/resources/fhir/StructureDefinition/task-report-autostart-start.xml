@@ -72,6 +72,11 @@
       <min value="1" />
       <fixedUri value="http://medizininformatik-initiative.de/fhir/CodeSystem/report" />
     </element>
+    <element id="Task.input:timer-interval.type.coding.version">
+      <path value="Task.input.type.coding.version"/>
+      <min value="1"/>
+      <fixedString value="#{version}"/>
+    </element>
     <element id="Task.input:timer-interval.type.coding.code">
       <path value="Task.input.type.coding.code" />
       <min value="1" />
@@ -112,6 +117,11 @@
       <min value="1" />
       <fixedUri value="http://medizininformatik-initiative.de/fhir/CodeSystem/report" />
     </element>
+    <element id="Task.input:first-execution.type.coding.version">
+      <path value="Task.input.type.coding.version"/>
+      <min value="1"/>
+      <fixedString value="#{version}"/>
+    </element>
     <element id="Task.input:first-execution.type.coding.code">
       <path value="Task.input.type.coding.code" />
       <min value="1" />
@@ -145,6 +155,11 @@
       <path value="Task.input.type.coding.system"/>
       <min value="1"/>
       <fixedUri value="http://medizininformatik-initiative.de/fhir/CodeSystem/report"/>
+    </element>
+    <element id="Task.input:hrp-identifier.type.coding.version">
+      <path value="Task.input.type.coding.version"/>
+      <min value="1"/>
+      <fixedString value="#{version}"/>
     </element>
     <element id="Task.input:hrp-identifier.type.coding.code">
       <path value="Task.input.type.coding.code"/>

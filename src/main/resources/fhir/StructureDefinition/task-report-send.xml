@@ -72,6 +72,11 @@
       <min value="1" />
       <fixedUri value="http://medizininformatik-initiative.de/fhir/CodeSystem/report" />
     </element>
+    <element id="Task.input:search-bundle-response-reference.type.coding.version">
+      <path value="Task.input.type.coding.version"/>
+      <min value="1"/>
+      <fixedString value="#{version}"/>
+    </element>
     <element id="Task.input:search-bundle-response-reference.type.coding.code">
       <path value="Task.input.type.coding.code" />
       <min value="1" />
@@ -133,6 +138,11 @@
       <min value="1"/>
       <fixedUri value="http://medizininformatik-initiative.de/fhir/CodeSystem/report"/>
     </element>
+    <element id="Task.output:report-status.type.coding.version">
+      <path value="Task.output.type.coding.version"/>
+      <min value="1"/>
+      <fixedString value="#{version}"/>
+    </element>
     <element id="Task.output:report-status.type.coding.code">
       <path value="Task.output.type.coding.code"/>
       <min value="1"/>
@@ -148,6 +158,11 @@
       <path value="Task.output.value[x].system"/>
       <min value="1"/>
       <fixedUri value="http://medizininformatik-initiative.de/fhir/CodeSystem/report-status"/>
+    </element>
+    <element id="Task.output:report-status.value[x].version">
+      <path value="Task.output.value[x].version"/>
+      <min value="1"/>
+      <fixedString value="#{version}"/>
     </element>
     <element id="Task.output:report-status.value[x].code">
       <path value="Task.output.value[x].code"/>

@@ -39,7 +39,7 @@ public class SelectTargetHrp implements ServiceTask
 	{
 		Task startTask = variables.getStartTask();
 
-		Identifier parentIdentifier = NamingSystems.OrganizationIdentifier.withValue(
+		Identifier consortiumIdentifier = NamingSystems.OrganizationIdentifier.withValue(
 				ConstantsBase.NAMINGSYSTEM_DSF_ORGANIZATION_IDENTIFIER_MEDICAL_INFORMATICS_INITIATIVE_CONSORTIUM);
 		Coding hrpRole = CodeSystems.OrganizationRole.hrp();
 
@@ -48,9 +48,9 @@ public class SelectTargetHrp implements ServiceTask
 		// 3. search hrp-identifier for mii-parent-organization and use first found
 		String hrpIdentifier = extractHrpIdentifierFromTask(api, startTask)
 				.or(extractHrpIdentifierFromEnv(hrpIdentifierEnvVariable))
-				.orElse(searchHrpIdentifier(api, parentIdentifier, hrpRole, startTask));
+				.orElse(searchHrpIdentifier(api, consortiumIdentifier, hrpRole, startTask));
 
-		Endpoint endpoint = getHrpEndpoint(api, parentIdentifier, hrpIdentifier, hrpRole);
+		Endpoint endpoint = getHrpEndpoint(api, consortiumIdentifier, hrpIdentifier, hrpRole);
 		String endpointIdentifier = extractEndpointIdentifier(endpoint);
 
 		Target target = variables.createTarget(hrpIdentifier, endpointIdentifier, endpoint.getAddress());
@@ -91,13 +91,13 @@ public class SelectTargetHrp implements ServiceTask
 		};
 	}
 
-	private String searchHrpIdentifier(ProcessPluginApi api, Identifier parentIdentifier, Coding hrpRole, Task task)
+	private String searchHrpIdentifier(ProcessPluginApi api, Identifier consortiumIdentifier, Coding hrpRole, Task task)
 	{
 		logger.debug(
 				"HRP not defined in Task with id '{}' or ENV variable - searching HRP for mii-consortium as report target",
 				task.getId());
 
-		Organization organization = getHrpOrganization(api, parentIdentifier, hrpRole);
+		Organization organization = getHrpOrganization(api, consortiumIdentifier, hrpRole);
 		return extractHrpIdentifierFromOrganization(organization);
 	}
 
