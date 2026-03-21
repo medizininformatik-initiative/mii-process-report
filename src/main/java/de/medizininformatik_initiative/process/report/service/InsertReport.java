@@ -73,8 +73,8 @@ public class InsertReport implements ServiceTask, InitializingBean
 			String absoluteReportId = new IdType(api.getEndpointProvider().getLocalEndpointAddress(),
 					ResourceType.Bundle.name(), reportId.getIdPart(), reportId.getVersionIdPart()).getValue();
 
-			logger.info("Stored report with id '{}' from organization '{}' for Task with id '{}'", absoluteReportId,
-					sendingOrganization, task.getId());
+			logger.info("Stored report '{}' from organization '{}' and Task '{}'", absoluteReportId,
+					sendingOrganization, api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 			if (hrpEmailEnabled)
 				sendMail(api.getMailService(), sendingOrganization, absoluteReportId);
@@ -86,8 +86,6 @@ public class InsertReport implements ServiceTask, InitializingBean
 					ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, "Insert report failed"));
 			variables.updateTask(task);
 
-			logger.warn("Storing report from organization '{}' for Task with id '{}' failed - {}", sendingOrganization,
-					task.getId(), exception.getMessage());
 			throw new ErrorBoundaryEvent(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR,
 					"Insert report failed - " + exception.getMessage());
 		}

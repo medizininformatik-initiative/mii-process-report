@@ -33,12 +33,11 @@ public class ReportProcessPluginDeploymentListener implements ProcessPluginDeplo
 		if (activeProcesses.contains(ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND))
 		{
 			CapabilityStatement conformance = api.getDsfClientProvider().getById(fhirStoreId)
-					.orElseThrow(
-							() -> new RuntimeException("DSF FHIR Client with ID '" + fhirStoreId + "' not configured"))
+					.orElseThrow(() -> new RuntimeException("DSF FHIR Client '" + fhirStoreId + "' not configured"))
 					.getConformance();
 
-			Objects.requireNonNull(conformance, "Connection test for DSF FHIR Client with ID '" + fhirStoreId
-					+ "' failed - CapabilityStatement is null");
+			Objects.requireNonNull(conformance,
+					"Connection test for DSF FHIR Client '" + fhirStoreId + "' failed - CapabilityStatement is null");
 		}
 	}
 }

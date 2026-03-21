@@ -39,26 +39,14 @@ public class CheckSearchBundle implements ServiceTask, InitializingBean
 		Target target = variables.getTarget();
 		Bundle bundle = variables.getFhirResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE);
 
-		logger.info("Checking downloaded search Bundle from HRP '{}' as part of Task with id '{}'",
-				target.getOrganizationIdentifierValue(), task.getId());
+		logger.info("Checking downloaded search Bundle from HRP '{}' for Task '{}'",
+				target.getOrganizationIdentifierValue(), api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
-		try
-		{
-			searchQueryCheckService.checkBundle(bundle);
+		searchQueryCheckService.checkBundle(bundle);
 
-			logger.info(
-					"Search Bundle downloaded from HRP '{}' as part of Task with id '{}' contains only valid requests of type GET and valid search params {}",
-					target.getOrganizationIdentifierValue(), task.getId(),
-					searchQueryCheckService.getValidSearchParams());
-		}
-		catch (Exception exception)
-		{
-			logger.warn("Error while checking search Bundle from HRP '{}' in Task with id '{}' - {}",
-					target.getOrganizationIdentifierValue(), task.getId(), exception.getMessage());
-			throw new RuntimeException(
-					"Error while checking search Bundle from HRP '" + target.getOrganizationIdentifierValue()
-							+ "' in Task with id '" + task.getId() + "' - " + exception.getMessage(),
-					exception);
-		}
+		logger.info(
+				"Search Bundle downloaded from HRP '{}' contains only valid requests of type GET and valid search params {} for Task '{}' ",
+				target.getOrganizationIdentifierValue(), searchQueryCheckService.getValidSearchParams(),
+				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 	}
 }

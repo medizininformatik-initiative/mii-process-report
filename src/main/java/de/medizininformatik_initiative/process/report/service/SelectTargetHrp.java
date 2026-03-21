@@ -37,7 +37,7 @@ public class SelectTargetHrp implements ServiceTask
 	@Override
 	public void execute(ProcessPluginApi api, Variables variables)
 	{
-		Task startTask = variables.getStartTask();
+		Task task = variables.getStartTask();
 
 		Identifier consortiumIdentifier = NamingSystems.OrganizationIdentifier.withValue(
 				ConstantsBase.NAMINGSYSTEM_DSF_ORGANIZATION_IDENTIFIER_MEDICAL_INFORMATICS_INITIATIVE_CONSORTIUM);
@@ -46,9 +46,9 @@ public class SelectTargetHrp implements ServiceTask
 		// 1. use hrp-identifier provided from task, if not present
 		// 2. use hrp-identifier provided from ENV variable, if not present
 		// 3. search hrp-identifier for mii-parent-organization and use first found
-		String hrpIdentifier = extractHrpIdentifierFromTask(api, startTask)
+		String hrpIdentifier = extractHrpIdentifierFromTask(api, task)
 				.or(extractHrpIdentifierFromEnv(hrpIdentifierEnvVariable))
-				.orElse(searchHrpIdentifier(api, consortiumIdentifier, hrpRole, startTask));
+				.orElse(searchHrpIdentifier(api, consortiumIdentifier, hrpRole, task));
 
 		Endpoint endpoint = getHrpEndpoint(api, consortiumIdentifier, hrpIdentifier, hrpRole);
 		String endpointIdentifier = extractEndpointIdentifier(endpoint);
@@ -58,7 +58,8 @@ public class SelectTargetHrp implements ServiceTask
 
 		boolean isDryRun = isDryRun(api, variables);
 		if (isDryRun)
-			logger.info("Creating new report as dry-run for HRP '{}'", hrpIdentifier);
+			logger.info("Creating new report as dry-run for HRP '{}' in Task '{}'", hrpIdentifier,
+					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 		variables.setBoolean(ConstantsReport.BPMN_EXECUTION_VARIABLE_IS_DRY_RUN, isDryRun);
 	}
@@ -71,8 +72,8 @@ public class SelectTargetHrp implements ServiceTask
 				.filter(Reference::hasIdentifier).map(Reference::getIdentifier)
 				.filter(i -> NamingSystems.OrganizationIdentifier.SID.equals(i.getSystem())).map(Identifier::getValue);
 
-		hrpIdentifier.ifPresent(
-				hrp -> logger.info("Using HRP '{}' from Task with id '{}' as report target", hrp, task.getId()));
+		hrpIdentifier.ifPresent(hrp -> logger.info("Using HRP '{}' from Task '{}' as report target", hrp,
+				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task)));
 
 		return hrpIdentifier;
 	}
@@ -93,15 +94,14 @@ public class SelectTargetHrp implements ServiceTask
 
 	private String searchHrpIdentifier(ProcessPluginApi api, Identifier consortiumIdentifier, Coding hrpRole, Task task)
 	{
-		logger.debug(
-				"HRP not defined in Task with id '{}' or ENV variable - searching HRP for mii-consortium as report target",
-				task.getId());
+		logger.info("HRP not defined in Task '{}' or ENV variable - searching HRP for mii-consortium as report target",
+				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
-		Organization organization = getHrpOrganization(api, consortiumIdentifier, hrpRole);
+		Organization organization = getHrpOrganization(api, consortiumIdentifier, hrpRole, task);
 		return extractHrpIdentifierFromOrganization(organization);
 	}
 
-	private Organization getHrpOrganization(ProcessPluginApi api, Identifier parentIdentifier, Coding role)
+	private Organization getHrpOrganization(ProcessPluginApi api, Identifier parentIdentifier, Coding role, Task task)
 	{
 		List<Organization> hrps = api.getOrganizationProvider().getOrganizations(parentIdentifier, role);
 
@@ -111,18 +111,19 @@ public class SelectTargetHrp implements ServiceTask
 
 		if (hrps.size() > 1)
 			logger.warn(
-					"Found more than 1 ({}) organization with role '{}' and parent organization '{}', using the first ('{}')",
+					"Found more than 1 ({}) organization with role '{}' and parent organization '{}', using the first ('{}') for Task '{}'",
 					hrps.size(), role.getCode(), parentIdentifier.getValue(),
-					hrps.get(0).getIdentifierFirstRep().getValue());
+					hrps.getFirst().getIdentifierFirstRep().getValue(),
+					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
-		return hrps.get(0);
+		return hrps.getFirst();
 	}
 
 	private String extractHrpIdentifierFromOrganization(Organization organization)
 	{
 		return NamingSystems.OrganizationIdentifier.findFirst(organization)
-				.orElseThrow(() -> new RuntimeException("organization with id '" + organization.getId()
-						+ "' is missing identifier with system '" + NamingSystems.OrganizationIdentifier.SID + "'"))
+				.orElseThrow(() -> new RuntimeException("organization '" + organization.getId()
+						+ "' is missing identifier.system '" + NamingSystems.OrganizationIdentifier.SID + "'"))
 				.getValue();
 	}
 
@@ -131,16 +132,16 @@ public class SelectTargetHrp implements ServiceTask
 	{
 		Identifier organizationIdentifier = NamingSystems.OrganizationIdentifier.withValue(organizationIdentifierValue);
 		return api.getEndpointProvider().getEndpoint(parentIdentifier, organizationIdentifier, role)
-				.orElseThrow(() -> new RuntimeException("Could not find any endpoint of '" + role.getCode()
-						+ "' with identifier '" + organizationIdentifier.getValue() + "'"));
+				.orElseThrow(() -> new RuntimeException("Could not find any Endpoint for organization '"
+						+ organizationIdentifier.getValue() + "' and role " + role.getCode() + " '"));
 	}
 
 	private String extractEndpointIdentifier(Endpoint endpoint)
 	{
 		return endpoint.getIdentifier().stream().filter(i -> NamingSystems.EndpointIdentifier.SID.equals(i.getSystem()))
 				.map(Identifier::getValue).findFirst()
-				.orElseThrow(() -> new RuntimeException("Endpoint with id '" + endpoint.getId()
-						+ "' is missing identifier with system '" + NamingSystems.EndpointIdentifier.SID + "'"));
+				.orElseThrow(() -> new RuntimeException("Endpoint '" + endpoint.getId()
+						+ "' is missing identifier.system '" + NamingSystems.EndpointIdentifier.SID + "'"));
 	}
 
 	private boolean isDryRun(ProcessPluginApi api, Variables variables)

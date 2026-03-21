@@ -19,6 +19,7 @@ import dev.dsf.bpe.v2.activity.ServiceTask;
 import dev.dsf.bpe.v2.client.dsf.BasicDsfClient;
 import dev.dsf.bpe.v2.client.dsf.DelayStrategy;
 import dev.dsf.bpe.v2.error.ErrorBoundaryEvent;
+import dev.dsf.bpe.v2.error.ServiceTaskErrorHandler;
 import dev.dsf.bpe.v2.variables.Variables;
 
 public class DownloadReport implements ServiceTask, InitializingBean
@@ -47,8 +48,9 @@ public class DownloadReport implements ServiceTask, InitializingBean
 		variables.setString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE_RESPONSE_REFERENCE,
 				reportReference.getValue());
 
-		logger.info("Downloading report with id '{}' from organization '{}' referenced in Task with id '{}'",
-				reportReference.getValue(), task.getRequester().getIdentifier().getValue(), task.getId());
+		logger.info("Downloading report '{}' from organization '{}' in Task '{}'", reportReference.getValue(),
+				task.getRequester().getIdentifier().getValue(),
+				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 		try
 		{
@@ -62,14 +64,15 @@ public class DownloadReport implements ServiceTask, InitializingBean
 					ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, "Download report failed"));
 			variables.updateTask(task);
 
-			logger.warn(
-					"Downloading report with id '{}' from organization '{}' referenced in Task with id '{}' failed - {}",
-					reportReference.getValue(), task.getRequester().getIdentifier().getValue(), task.getId(),
-					exception.getMessage());
-
 			throw new ErrorBoundaryEvent(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR,
 					"Download report failed - " + exception.getMessage());
 		}
+	}
+
+	@Override
+	public ServiceTaskErrorHandler getErrorHandler()
+	{
+		return ServiceTask.super.getErrorHandler();
 	}
 
 	private IdType getReportReference(ProcessPluginApi api, Task task)
@@ -80,11 +83,12 @@ public class DownloadReport implements ServiceTask, InitializingBean
 				.filter(Reference::hasReference).map(Reference::getReference).toList();
 
 		if (reportReferences.isEmpty())
-			throw new IllegalArgumentException("No report reference present in Task with id '" + task.getId() + "'");
+			throw new IllegalArgumentException("No report reference present in Task '"
+					+ api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task) + "'");
 
 		if (reportReferences.size() > 1)
-			logger.warn("Found {} report references in task with id '{}', using only the first",
-					reportReferences.size(), task.getId());
+			logger.warn("Found {} report references in Task '{}', using only the first", reportReferences.size(),
+					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 		return new IdType(reportReferences.get(0));
 	}

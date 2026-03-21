@@ -36,17 +36,18 @@ public class LogDryRun implements ServiceTask, InitializingBean
 	@Override
 	public void execute(ProcessPluginApi api, Variables variables)
 	{
+		Task task = variables.getStartTask();
 		String recipient = variables.getTarget().getOrganizationIdentifierValue();
 		String reportLocation = variables
 				.getString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE_RESPONSE_REFERENCE);
 
-		logger.info("Report dry-run successful for HRP '{}' at '{}' and task with id '{}'", recipient, reportLocation,
-				variables.getStartTask().getId());
+		logger.info("Report dry-run successful for HRP '{}' at '{}' and Task '{}'", recipient, reportLocation,
+				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 		if (dicEmailEnabled)
 			sendSuccessfulMail(api.getMailService(), recipient, reportLocation);
 
-		addOutputToStartTask(api, variables);
+		addOutputToStartTask(api, variables, task);
 	}
 
 	private void sendSuccessfulMail(MailService mailService, String recipient, String reportLocation)
@@ -60,9 +61,8 @@ public class LogDryRun implements ServiceTask, InitializingBean
 		mailService.send(subject, message);
 	}
 
-	private void addOutputToStartTask(ProcessPluginApi api, Variables variables)
+	private void addOutputToStartTask(ProcessPluginApi api, Variables variables, Task task)
 	{
-		Task task = variables.getStartTask();
 		task.addOutput(statusGenerator.createReportStatusOutput(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_DRY_RUN,
 				api.getProcessPluginDefinition().getResourceVersion()));
 

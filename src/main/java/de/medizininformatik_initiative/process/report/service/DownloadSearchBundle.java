@@ -48,16 +48,16 @@ public class DownloadSearchBundle implements ServiceTask, InitializingBean
 				+ ConstantsReport.NAMINGSYSTEM_SEARCH_BUNDLE_IDENTIFIER_VALUE_PREFIX
 				+ api.getProcessPluginDefinition().getResourceVersion();
 
-		logger.info("Downloading search Bundle '{}' from HRP '{}' for Task with id '{}'", searchBundleIdentifier,
-				target.getOrganizationIdentifierValue(), task.getId());
+		logger.info("Downloading search Bundle '{}' from HRP '{}' for Task '{}'", searchBundleIdentifier,
+				target.getOrganizationIdentifierValue(), api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 		try
 		{
 			Bundle bundle = searchSearchBundle(api, target, searchBundleIdentifier);
-			api.getDataLogger().log("Search Response", bundle);
+			api.getDataLogger().log("Search response", bundle);
 
 			Bundle searchBundle = extractSearchBundle(bundle, searchBundleIdentifier,
-					target.getOrganizationIdentifierValue(), task.getId());
+					target.getOrganizationIdentifierValue());
 			api.getDataLogger().log("Search Bundle", searchBundle);
 
 			variables.setFhirResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE, searchBundle);
@@ -74,17 +74,12 @@ public class DownloadSearchBundle implements ServiceTask, InitializingBean
 					statusCode = ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_NOT_ALLOWED;
 				}
 
-				task.addOutput(statusGenerator.createReportStatusOutput(statusCode, "Download search bundle failed"));
+				task.addOutput(statusGenerator.createReportStatusOutput(statusCode,
+						api.getProcessPluginDefinition().getResourceVersion(), "Download search bundle failed"));
 				variables.updateTask(task);
 			}
 
-			logger.warn(
-					"Error while reading search Bundle with identifier '{}' from HRP '{}' in Task with id '{}' - {}",
-					searchBundleIdentifier, target.getOrganizationIdentifierValue(), task.getId(),
-					exception.getMessage());
-			throw new RuntimeException("Error while reading search Bundle with identifier '" + searchBundleIdentifier
-					+ "' from HRP '" + target.getOrganizationIdentifierValue() + "' in Task with id '" + task.getId()
-					+ "' - " + exception.getMessage(), exception);
+			throw exception;
 		}
 	}
 
@@ -98,13 +93,12 @@ public class DownloadSearchBundle implements ServiceTask, InitializingBean
 				Map.of("identifier", Collections.singletonList(searchBundleIdentifier)));
 	}
 
-	private Bundle extractSearchBundle(Bundle bundle, String searchBundleIdentifier, String hrpIdentifier,
-			String taskId)
+	private Bundle extractSearchBundle(Bundle bundle, String searchBundleIdentifier, String hrpIdentifier)
 	{
 		if (bundle.getTotal() != 1 && !(bundle.getEntryFirstRep().getResource() instanceof Bundle))
-			throw new IllegalStateException("Expected a bundle from the HRP '" + hrpIdentifier
+			throw new IllegalStateException("Expected a Bundle from HRP '" + hrpIdentifier
 					+ "' with one entry being a search Bundle with identifier '" + searchBundleIdentifier
-					+ "' but found " + bundle.getTotal() + " in Task with id '" + taskId + "'");
+					+ "' but found " + bundle.getTotal());
 
 		return (Bundle) bundle.getEntryFirstRep().getResource();
 	}

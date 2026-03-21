@@ -8,11 +8,13 @@ import org.hl7.fhir.r4.model.Task;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.processes.common.activity.RetryTaskSender;
+import de.medizininformatik_initiative.processes.common.error.MessageIntermediateThrowEventHandlerContinuingProcess;
 import dev.dsf.bpe.v2.ProcessPluginApi;
 import dev.dsf.bpe.v2.activity.MessageIntermediateThrowEvent;
 import dev.dsf.bpe.v2.activity.task.BusinessKeyStrategies;
 import dev.dsf.bpe.v2.activity.task.TaskSender;
 import dev.dsf.bpe.v2.activity.values.SendTaskValues;
+import dev.dsf.bpe.v2.error.MessageIntermediateThrowEventErrorHandler;
 import dev.dsf.bpe.v2.variables.Target;
 import dev.dsf.bpe.v2.variables.Variables;
 
@@ -43,5 +45,11 @@ public class StartSendReport implements MessageIntermediateThrowEvent
 						ConstantsReport.CODESYSTEM_REPORT_VALUE_HRP_IDENTIFIER,
 						api.getProcessPluginDefinition().getResourceVersion()))
 				.toList();
+	}
+
+	@Override
+	public MessageIntermediateThrowEventErrorHandler getErrorHandler()
+	{
+		return new MessageIntermediateThrowEventHandlerContinuingProcess();
 	}
 }

@@ -30,8 +30,8 @@ public class SetTimer implements ServiceTask
 		Task task = variables.getStartTask();
 
 		String timerInterval = getTimerInterval(api, variables);
-		logger.info("Executing report send process in timer interval '{}' for Task with id '{}'", timerInterval,
-				task.getId());
+		logger.info("Executing report send process with timer interval '{}' for Task '{}'", timerInterval,
+				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 		variables.setString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_TIMER_INTERVAL, timerInterval);
 
 		Optional<TimeType> firstExecutionTime = getFirstExecution(api, variables);
@@ -41,8 +41,8 @@ public class SetTimer implements ServiceTask
 			variables.setString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_FIRST_EXECUTION, firstExecutionDateTime);
 			variables.setBoolean(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_FIRST_EXECUTION_DELAYED, true);
 
-			logger.info("First execution of report send process set to '{}' for Task with id '{}'",
-					firstExecutionDateTime, task.getId());
+			logger.info("First execution of report send process set to '{}' for Task '{}'", firstExecutionDateTime,
+					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(variables.getStartTask()));
 
 		}
 		else

@@ -63,41 +63,32 @@ public class CreateReport implements ServiceTask, InitializingBean
 		Target target = variables.getTarget();
 		boolean isDryRun = variables.getBoolean(ConstantsReport.BPMN_EXECUTION_VARIABLE_IS_DRY_RUN);
 
-		try
-		{
-			DsfClient client = getDsfClient(api);
-			Bundle responseBundle = executeSearchBundle(client, searchBundle, target.getOrganizationIdentifierValue());
+		DsfClient client = getDsfClient(api);
+		Bundle responseBundle = executeSearchBundle(client, searchBundle, target.getOrganizationIdentifierValue(),
+				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
-			Bundle reportBundle = transformToReportBundle(api, searchBundle, responseBundle, target, isDryRun);
-			api.getDataLogger().log("Report Bundle", reportBundle);
+		Bundle reportBundle = transformToReportBundle(api, searchBundle, responseBundle, target, isDryRun);
+		api.getDataLogger().log("Report Bundle", reportBundle);
 
-			checkReportBundle(searchBundle, reportBundle, target.getOrganizationIdentifierValue());
+		checkReportBundle(searchBundle, reportBundle, target.getOrganizationIdentifierValue());
 
-			String reportReference = storeReportBundle(api, reportBundle, target.getOrganizationIdentifierValue(),
-					task.getId());
-			variables.setString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE_RESPONSE_REFERENCE,
-					reportReference);
-		}
-		catch (Exception exception)
-		{
-			logger.warn("Could not create report for HRP '{}' in Task with id '{}' - {}",
-					target.getOrganizationIdentifierValue(), task.getId(), exception.getMessage());
-			throw new RuntimeException("Could not create report for HRP '" + target.getOrganizationIdentifierValue()
-					+ "' in Task with id '" + task.getId() + "' - " + exception.getMessage(), exception);
-		}
+		String reportReference = storeReportBundle(api, reportBundle, target.getOrganizationIdentifierValue(), task);
+		variables.setString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE_RESPONSE_REFERENCE,
+				reportReference);
 	}
 
 	private DsfClient getDsfClient(ProcessPluginApi api)
 	{
 		return api.getDsfClientProvider().getById(fhirStoreId)
-				.orElseThrow(() -> new RuntimeException("DSF FHIR Client with ID '" + fhirStoreId + "' not found"));
+				.orElseThrow(() -> new RuntimeException("DSF FHIR Client '" + fhirStoreId + "' not configured"));
 	}
 
-	private Bundle executeSearchBundle(DsfClient client, Bundle searchBundle, String hrpIdentifier)
+	private Bundle executeSearchBundle(DsfClient client, Bundle searchBundle, String hrpIdentifier,
+			String taskReference)
 	{
 		logger.info(
-				"Executing search Bundle from HRP '{}' against FHIR store with base URL '{}' - this could take a while...",
-				hrpIdentifier, client.getBaseUrl());
+				"Executing search Bundle from HRP '{}' against FHIR store with base URL '{}' for Task '{}' - this could take a while...",
+				hrpIdentifier, client.getBaseUrl(), taskReference);
 
 		Bundle responseBundle = new Bundle();
 		responseBundle.setType(Bundle.BundleType.BATCHRESPONSE);
@@ -105,13 +96,13 @@ public class CreateReport implements ServiceTask, InitializingBean
 		searchBundle.getEntry().stream().filter(Bundle.BundleEntryComponent::hasRequest)
 				.map(Bundle.BundleEntryComponent::getRequest)
 				.filter(r -> r.hasUrl() && r.hasMethod() && Bundle.HTTPVerb.GET.equals(r.getMethod()))
-				.map(Bundle.BundleEntryRequestComponent::getUrl).map(url -> executeRequest(client, url))
+				.map(Bundle.BundleEntryRequestComponent::getUrl).map(url -> executeRequest(client, url, taskReference))
 				.forEach(responseBundle::addEntry);
 
 		return responseBundle;
 	}
 
-	private Bundle.BundleEntryComponent executeRequest(DsfClient client, String url)
+	private Bundle.BundleEntryComponent executeRequest(DsfClient client, String url, String taskReference)
 	{
 		Bundle.BundleEntryComponent entry = new Bundle.BundleEntryComponent();
 		String urlWithBase = URI.create(client.getBaseUrl())
@@ -126,7 +117,8 @@ public class CreateReport implements ServiceTask, InitializingBean
 		}
 		catch (Exception exception)
 		{
-			logger.warn("Could not execute report search request '{}' - {}", urlWithBase, exception.getMessage());
+			logger.warn("Could not execute report search request '{}' for Task '{}' - {}", urlWithBase, taskReference,
+					exception.getMessage());
 
 			OperationOutcome outcome = new OperationOutcome();
 			outcome.addIssue().setSeverity(OperationOutcome.IssueSeverity.ERROR)
@@ -289,7 +281,7 @@ public class CreateReport implements ServiceTask, InitializingBean
 					"Report Bundle for HRP '" + hrpIdentifier + "' only contains error status codes");
 	}
 
-	private String storeReportBundle(ProcessPluginApi api, Bundle responseBundle, String hrpIdentifier, String taskId)
+	private String storeReportBundle(ProcessPluginApi api, Bundle responseBundle, String hrpIdentifier, Task task)
 	{
 
 		PreferReturnMinimal client = api.getDsfClientProvider().getLocal().withMinimalReturn().withRetry(
@@ -304,8 +296,8 @@ public class CreateReport implements ServiceTask, InitializingBean
 		String absoluteId = new IdType(api.getEndpointProvider().getLocalEndpointAddress(), ResourceType.Bundle.name(),
 				bundleIdType.getIdPart(), bundleIdType.getVersionIdPart()).getValue();
 
-		logger.info("Stored report Bundle with id '{}' for HRP '{}' and Task with id '{}'", absoluteId, hrpIdentifier,
-				taskId);
+		logger.info("Stored report Bundle '{}' for HRP '{}' and Task '{}'", absoluteId, hrpIdentifier,
+				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 		return absoluteId;
 	}

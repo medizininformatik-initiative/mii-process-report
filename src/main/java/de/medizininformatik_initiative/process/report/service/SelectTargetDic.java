@@ -53,7 +53,7 @@ public class SelectTargetDic implements ServiceTask
 	{
 		return endpoint.getIdentifier().stream().filter(i -> NamingSystems.EndpointIdentifier.SID.equals(i.getSystem()))
 				.map(Identifier::getValue).findFirst()
-				.orElseThrow(() -> new RuntimeException("Endpoint with id '" + endpoint.getId()
-						+ "' is missing identifier with system '" + NamingSystems.EndpointIdentifier.SID + "'"));
+				.orElseThrow(() -> new RuntimeException("Endpoint '" + endpoint.getId()
+						+ "' is missing identifier.system '" + NamingSystems.EndpointIdentifier.SID + "'"));
 	}
 }

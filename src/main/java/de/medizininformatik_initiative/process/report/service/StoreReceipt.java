@@ -56,6 +56,7 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 
 		variables.updateTask(startTask);
 
+		// Failed tasks are not automatically updated on process end listener
 		if (Task.TaskStatus.FAILED.equals(startTask.getStatus()))
 		{
 			api.getDsfClientProvider().getLocal().withRetry(ConstantsBase.DSF_CLIENT_RETRY_6_TIMES,
@@ -85,10 +86,10 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 	{
 		startTask.getOutput().stream().filter(o -> o.getValue() instanceof Coding)
 				.filter(o -> ConstantsReport.CODESYSTEM_REPORT_STATUS.equals(((Coding) o.getValue()).getSystem()))
-				.forEach(o -> doWriteStatusLogAndSendMail(api, o, startTask.getId(), reportLocation, hrpIdentifier));
+				.forEach(o -> doWriteStatusLogAndSendMail(api, o, startTask, reportLocation, hrpIdentifier));
 	}
 
-	private void doWriteStatusLogAndSendMail(ProcessPluginApi api, Task.TaskOutputComponent output, String startTaskId,
+	private void doWriteStatusLogAndSendMail(ProcessPluginApi api, Task.TaskOutputComponent output, Task task,
 			String reportLocation, String hrpIdentifier)
 	{
 		Coding status = (Coding) output.getValue();
@@ -99,18 +100,20 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 
 		if (ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK.equals(code))
 		{
-			logger.info("Task with id '{}' has report-status code '{}' for HRP '{}'", startTaskId, code, hrpIdentifier);
+			logger.info("Report has status code '{}' for HRP '{}' and Task '{}'", code, hrpIdentifier,
+					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 			if (dicEmailEnabled)
 				sendSuccessfulMail(api.getMailService(), reportLocation, code, hrpIdentifier);
 		}
 		else
 		{
-			logger.warn("Task with id '{}' has report-status code '{}'{} for HRP '{}'", startTaskId, code, errorLog,
-					hrpIdentifier);
+			logger.warn("Task has status code '{}'{} for HRP '{}' and Task '{}'", code, errorLog, hrpIdentifier,
+					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 			if (dicEmailEnabled)
-				sendErrorMail(api.getMailService(), startTaskId, reportLocation, code, error, hrpIdentifier);
+				sendErrorMail(api.getMailService(), api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task),
+						reportLocation, code, error, hrpIdentifier);
 		}
 	}
 
@@ -124,14 +127,13 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 		mailService.send(subject, message);
 	}
 
-	private void sendErrorMail(MailService mailService, String startTaskId, String reportLocation, String code,
+	private void sendErrorMail(MailService mailService, String taskReference, String reportLocation, String code,
 			String error, String hrpIdentifier)
 	{
 		String subject = "Error in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND + "'";
-
 		String message = "HRP '" + hrpIdentifier + "' could not download or insert new report with reference '"
-				+ reportLocation + "' in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND
-				+ "' in Task with id '" + startTaskId + "':\n" + "- status code: " + code + "\n" + "- error: " + error;
+				+ reportLocation + "' in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND + "' and Task  '"
+				+ taskReference + "':\n" + "- status code: " + code + "\n" + "- error: " + error;
 
 		mailService.send(subject, message);
 	}
