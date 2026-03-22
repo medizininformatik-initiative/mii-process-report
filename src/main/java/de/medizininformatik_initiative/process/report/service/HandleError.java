@@ -22,12 +22,11 @@ public class HandleError implements ServiceTask
 	public void execute(ProcessPluginApi api, Variables variables)
 	{
 		Task task = variables.getStartTask();
+		if (hrpEmailEnabled)
+			sendMail(api, variables, task);
 
 		if (Task.TaskStatus.FAILED.equals(task.getStatus()))
 		{
-			if (hrpEmailEnabled)
-				sendMail(api, variables, task);
-
 			api.getDsfClientProvider().getLocal().withRetry(ConstantsBase.DSF_CLIENT_RETRY_6_TIMES,
 					DelayStrategy.constant(ConstantsBase.DSF_CLIENT_RETRY_INTERVAL_5MIN)).update(task);
 		}
