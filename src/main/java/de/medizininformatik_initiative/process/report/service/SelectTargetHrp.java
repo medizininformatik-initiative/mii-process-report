@@ -76,6 +76,9 @@ public class SelectTargetHrp implements ServiceTask, InitializingBean
 		if (isDryRun)
 			logger.info("Creating new report as dry-run for HRP '{}' in Task '{}'", hrpIdentifier,
 					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
+		else
+			logger.info("Executing report for HRP '{}' with status timer interval '{}' in Task '{}'", hrpIdentifier,
+					statusTimerInterval, api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 		variables.setBoolean(ConstantsReport.BPMN_EXECUTION_VARIABLE_IS_DRY_RUN, isDryRun);
 	}
