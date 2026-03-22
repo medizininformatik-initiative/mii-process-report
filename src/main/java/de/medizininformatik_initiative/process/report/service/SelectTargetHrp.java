@@ -45,7 +45,8 @@ public class SelectTargetHrp implements ServiceTask, InitializingBean
 	public void afterPropertiesSet() throws Exception
 	{
 		if (!ISO_8601_DURATION.matcher(statusTimerInterval).matches())
-			throw new IllegalArgumentException("statusTimerInterval '" + statusTimerInterval + "' not in ISO 8601 time duration format");
+			throw new IllegalArgumentException(
+					"statusTimerInterval '" + statusTimerInterval + "' not in ISO 8601 time duration format");
 	}
 
 	@Override
