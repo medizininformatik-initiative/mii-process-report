@@ -33,7 +33,7 @@ public class ReportProcessPluginDeploymentListener implements ProcessPluginDeplo
 		if (activeProcesses.contains(ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND))
 		{
 			CapabilityStatement conformance = api.getDsfClientProvider().getById(fhirStoreId)
-					.orElseThrow(() -> new RuntimeException("DSF FHIR Client '" + fhirStoreId + "' not configured"))
+					.orElseThrow(() -> new RuntimeException("DSF FHIR client '" + fhirStoreId + "' not configured"))
 					.getConformance();
 
 			Objects.requireNonNull(conformance,

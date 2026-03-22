@@ -25,16 +25,19 @@ import jakarta.ws.rs.core.Response;
 
 public class SendReceipt implements MessageEndEvent, InitializingBean
 {
+	private final ProcessPluginApi api;
 	private final ReportStatusGenerator statusGenerator;
 
-	public SendReceipt(ReportStatusGenerator statusGenerator)
+	public SendReceipt(ProcessPluginApi api, ReportStatusGenerator statusGenerator)
 	{
+		this.api = api;
 		this.statusGenerator = statusGenerator;
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception
 	{
+		Objects.requireNonNull(api, "api");
 		Objects.requireNonNull(statusGenerator, "reportStatusGenerator");
 	}
 
@@ -77,9 +80,8 @@ public class SendReceipt implements MessageEndEvent, InitializingBean
 
 	private List<Task.ParameterComponent> createReceiptOk(ProcessPluginApi api)
 	{
-		return List
-				.of(statusGenerator.createReportStatusInput(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK,
-						api.getProcessPluginDefinition().getResourceVersion()));
+		return List.of(statusGenerator.createReportStatusInput(api.getProcessPluginDefinition().getResourceVersion(),
+				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK));
 	}
 
 	@Override
@@ -100,7 +102,8 @@ public class SendReceipt implements MessageEndEvent, InitializingBean
 				statusCode = ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_NOT_ALLOWED;
 			}
 
-			return statusGenerator.createReportStatusOutput(statusCode, "Send receipt failed");
+			return statusGenerator.createReportStatusOutput(api.getProcessPluginDefinition().getResourceVersion(),
+					statusCode, "Send receipt failed");
 		};
 	}
 }

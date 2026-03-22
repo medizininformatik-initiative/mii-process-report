@@ -77,8 +77,8 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 	private void handleMissingResponse(Task startTask, String resourcesVersion)
 	{
 		startTask.setStatus(Task.TaskStatus.FAILED);
-		startTask.addOutput(statusGenerator.createReportStatusOutput(
-				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_MISSING, resourcesVersion));
+		startTask.addOutput(statusGenerator.createReportStatusOutput(resourcesVersion,
+				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_MISSING));
 	}
 
 	private void writeStatusLogAndSendMail(ProcessPluginApi api, Task startTask, String reportLocation,
@@ -104,7 +104,8 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 			if (dicEmailEnabled)
-				sendSuccessfulMail(api.getMailService(), reportLocation, code, hrpIdentifier);
+				sendSuccessfulMail(api.getMailService(), api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task),
+						reportLocation, code, hrpIdentifier);
 		}
 		else
 		{
@@ -117,12 +118,14 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 		}
 	}
 
-	private void sendSuccessfulMail(MailService mailService, String reportLocation, String code, String hrpIdentifier)
+	private void sendSuccessfulMail(MailService mailService, String taskReference, String reportLocation, String code,
+			String hrpIdentifier)
 	{
 		String subject = "New successful report in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND + "'";
 		String message = "A new report has been successfully created and retrieved by the HRP '" + hrpIdentifier
 				+ "' with status code '" + code + "' in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND
-				+ "' and can be accessed using the following link:\n" + "- " + reportLocation;
+				+ "' and Task  '" + taskReference + "'. It can be accessed using the following link:\n" + "- "
+				+ reportLocation;
 
 		mailService.send(subject, message);
 	}

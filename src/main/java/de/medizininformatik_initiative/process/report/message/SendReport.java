@@ -25,16 +25,19 @@ import jakarta.ws.rs.core.Response;
 
 public class SendReport implements MessageIntermediateThrowEvent, InitializingBean
 {
+	private final ProcessPluginApi api;
 	private final ReportStatusGenerator statusGenerator;
 
-	public SendReport(ReportStatusGenerator statusGenerator)
+	public SendReport(ProcessPluginApi api, ReportStatusGenerator statusGenerator)
 	{
+		this.api = api;
 		this.statusGenerator = statusGenerator;
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception
 	{
+		Objects.requireNonNull(api, "api");
 		Objects.requireNonNull(statusGenerator, "statusGenerator");
 	}
 
@@ -79,7 +82,8 @@ public class SendReport implements MessageIntermediateThrowEvent, InitializingBe
 				statusCode = ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_NOT_ALLOWED;
 			}
 
-			return statusGenerator.createReportStatusOutput(statusCode, "Send report failed");
+			return statusGenerator.createReportStatusOutput(api.getProcessPluginDefinition().getResourceVersion(),
+					statusCode, "Send report failed");
 		};
 	}
 }

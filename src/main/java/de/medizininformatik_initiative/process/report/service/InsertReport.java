@@ -66,8 +66,8 @@ public class InsertReport implements ServiceTask, InitializingBean
 					Collections.singletonList(reportIdentifier.getSystem() + "|" + reportIdentifier.getValue())));
 
 			task.addOutput(
-					statusGenerator.createReportStatusOutput(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_OK,
-							api.getProcessPluginDefinition().getResourceVersion()));
+					statusGenerator.createReportStatusOutput(api.getProcessPluginDefinition().getResourceVersion(),
+							ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_OK));
 			variables.updateTask(task);
 
 			String absoluteReportId = new IdType(api.getEndpointProvider().getLocalEndpointAddress(),
@@ -82,8 +82,9 @@ public class InsertReport implements ServiceTask, InitializingBean
 		catch (Exception exception)
 		{
 			task.setStatus(Task.TaskStatus.FAILED);
-			task.addOutput(statusGenerator.createReportStatusOutput(
-					ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, "Insert report failed"));
+			task.addOutput(
+					statusGenerator.createReportStatusOutput(api.getProcessPluginDefinition().getResourceVersion(),
+							ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, "Insert report failed"));
 			variables.updateTask(task);
 
 			throw new ErrorBoundaryEvent(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR,

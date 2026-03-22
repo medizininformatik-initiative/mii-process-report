@@ -60,8 +60,9 @@ public class DownloadReport implements ServiceTask, InitializingBean
 		catch (Exception exception)
 		{
 			task.setStatus(Task.TaskStatus.FAILED);
-			task.addOutput(statusGenerator.createReportStatusOutput(
-					ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, "Download report failed"));
+			task.addOutput(
+					statusGenerator.createReportStatusOutput(api.getProcessPluginDefinition().getResourceVersion(),
+							ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, "Download report failed"));
 			variables.updateTask(task);
 
 			throw new ErrorBoundaryEvent(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR,
@@ -90,7 +91,7 @@ public class DownloadReport implements ServiceTask, InitializingBean
 			logger.warn("Found {} report references in Task '{}', using only the first", reportReferences.size(),
 					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
-		return new IdType(reportReferences.get(0));
+		return new IdType(reportReferences.getFirst());
 	}
 
 	private Bundle downloadReportBundle(ProcessPluginApi api, IdType reportReference)

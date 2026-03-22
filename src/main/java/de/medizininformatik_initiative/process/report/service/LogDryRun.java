@@ -63,8 +63,8 @@ public class LogDryRun implements ServiceTask, InitializingBean
 
 	private void addOutputToStartTask(ProcessPluginApi api, Variables variables, Task task)
 	{
-		task.addOutput(statusGenerator.createReportStatusOutput(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_DRY_RUN,
-				api.getProcessPluginDefinition().getResourceVersion()));
+		task.addOutput(statusGenerator.createReportStatusOutput(api.getProcessPluginDefinition().getResourceVersion(),
+				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_DRY_RUN));
 
 		variables.updateTask(task);
 	}

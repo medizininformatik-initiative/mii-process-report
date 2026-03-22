@@ -179,8 +179,8 @@ public class TaskProfileTest
 		task.addInput().setValue(new BooleanType(true)).getType().addCoding()
 				.setSystem(ConstantsReport.CODESYSTEM_REPORT).setVersion(def.getResourceVersion())
 				.setCode(ConstantsReport.CODESYSTEM_REPORT_VALUE_DRY_RUN);
-		task.addOutput(new ReportStatusGenerator().createReportStatusOutput(
-				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_DRY_RUN, def.getResourceVersion()));
+		task.addOutput(new ReportStatusGenerator().createReportStatusOutput(def.getResourceVersion(),
+				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_DRY_RUN));
 
 		ValidationResult result = resourceValidator.validate(task);
 		ValidationSupportRule.logValidationMessages(logger, result);
@@ -210,8 +210,8 @@ public class TaskProfileTest
 	public void testTaskSendStartProcessProfileValidWithReportStatusOutput()
 	{
 		Task task = createValidTaskSendStartProcess();
-		task.addOutput(new ReportStatusGenerator().createReportStatusOutput(
-				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK, def.getResourceVersion()));
+		task.addOutput(new ReportStatusGenerator().createReportStatusOutput(def.getResourceVersion(),
+				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK));
 
 		ValidationResult result = resourceValidator.validate(task);
 		ValidationSupportRule.logValidationMessages(logger, result);
@@ -224,9 +224,8 @@ public class TaskProfileTest
 	public void testTaskSendStartProcessProfileValidWithReportStatusErrorOutput()
 	{
 		Task task = createValidTaskSendStartProcess();
-		task.addOutput(new ReportStatusGenerator().createReportStatusOutput(
-				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_NOT_REACHABLE, def.getResourceVersion(),
-				"some error message"));
+		task.addOutput(new ReportStatusGenerator().createReportStatusOutput(def.getResourceVersion(),
+				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_NOT_REACHABLE, "some error message"));
 
 		ValidationResult result = resourceValidator.validate(task);
 		ValidationSupportRule.logValidationMessages(logger, result);
@@ -271,8 +270,8 @@ public class TaskProfileTest
 	public void testTaskSendProcessProfileValidWithReportStatusOutput()
 	{
 		Task task = createValidTaskSendProcess();
-		task.addOutput(new ReportStatusGenerator().createReportStatusOutput(
-				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_OK, def.getResourceVersion()));
+		task.addOutput(new ReportStatusGenerator().createReportStatusOutput(def.getResourceVersion(),
+				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_OK));
 
 		ValidationResult result = resourceValidator.validate(task);
 		ValidationSupportRule.logValidationMessages(logger, result);
@@ -285,9 +284,8 @@ public class TaskProfileTest
 	public void testTaskSendProcessProfileValidWithReportStatusErrorOutput()
 	{
 		Task task = createValidTaskSendProcess();
-		task.addOutput(new ReportStatusGenerator().createReportStatusOutput(
-				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, def.getResourceVersion(),
-				"some error message"));
+		task.addOutput(new ReportStatusGenerator().createReportStatusOutput(def.getResourceVersion(),
+				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, "some error message"));
 
 		ValidationResult result = resourceValidator.validate(task);
 		ValidationSupportRule.logValidationMessages(logger, result);
@@ -328,8 +326,8 @@ public class TaskProfileTest
 	public void testTaskReceiveProcessProfileValidWithResponseInput()
 	{
 		Task task = createValidTaskReceiveProcess();
-		task.addInput(new ReportStatusGenerator().createReportStatusInput(
-				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK, def.getResourceVersion()));
+		task.addInput(new ReportStatusGenerator().createReportStatusInput(def.getResourceVersion(),
+				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK));
 
 		ValidationResult result = resourceValidator.validate(task);
 		ValidationSupportRule.logValidationMessages(logger, result);
@@ -342,9 +340,8 @@ public class TaskProfileTest
 	public void testTaskReceiveProcessProfileValidWithResponseInputError()
 	{
 		Task task = createValidTaskReceiveProcess();
-		task.addInput(new ReportStatusGenerator().createReportStatusInput(
-				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_ERROR, def.getResourceVersion(),
-				"some error message"));
+		task.addInput(new ReportStatusGenerator().createReportStatusInput(def.getResourceVersion(),
+				ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_ERROR, "some error message"));
 
 		ValidationResult result = resourceValidator.validate(task);
 		ValidationSupportRule.logValidationMessages(logger, result);

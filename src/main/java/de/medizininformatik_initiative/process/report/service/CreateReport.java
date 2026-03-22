@@ -82,7 +82,7 @@ public class CreateReport implements ServiceTask, InitializingBean
 	private DsfClient getDsfClient(ProcessPluginApi api)
 	{
 		return api.getDsfClientProvider().getById(fhirStoreId)
-				.orElseThrow(() -> new RuntimeException("DSF FHIR Client '" + fhirStoreId + "' not configured"));
+				.orElseThrow(() -> new RuntimeException("DSF FHIR client '" + fhirStoreId + "' not configured"));
 	}
 
 	private Bundle executeSearchBundle(DsfClient client, Bundle searchBundle, String hrpIdentifier,

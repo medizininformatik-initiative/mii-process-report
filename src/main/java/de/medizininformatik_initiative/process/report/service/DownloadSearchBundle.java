@@ -78,8 +78,9 @@ public class DownloadSearchBundle implements ServiceTask, InitializingBean
 					statusCode = ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_NOT_ALLOWED;
 				}
 
-				task.addOutput(statusGenerator.createReportStatusOutput(statusCode,
-						api.getProcessPluginDefinition().getResourceVersion(), "Download search bundle failed"));
+				task.addOutput(
+						statusGenerator.createReportStatusOutput(api.getProcessPluginDefinition().getResourceVersion(),
+								statusCode, "Download search bundle failed"));
 				variables.updateTask(task);
 			}
 

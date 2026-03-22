@@ -133,7 +133,7 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public SendReport sendReport()
 	{
-		return new SendReport(reportStatusGenerator());
+		return new SendReport(api, reportStatusGenerator());
 	}
 
 	@Bean
@@ -177,6 +177,6 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public SendReceipt sendReceipt()
 	{
-		return new SendReceipt(reportStatusGenerator());
+		return new SendReceipt(api, reportStatusGenerator());
 	}
 }
