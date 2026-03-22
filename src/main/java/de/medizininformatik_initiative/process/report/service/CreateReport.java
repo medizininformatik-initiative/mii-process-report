@@ -68,7 +68,9 @@ public class CreateReport implements ServiceTask, InitializingBean
 				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 
 		Bundle reportBundle = transformToReportBundle(api, searchBundle, responseBundle, target, isDryRun);
-		api.getDataLogger().log("Report Bundle", reportBundle);
+		api.getDataLogger().log(
+				"Report Bundle for Task '" + api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task) + "'",
+				reportBundle);
 
 		checkReportBundle(searchBundle, reportBundle, target.getOrganizationIdentifierValue());
 

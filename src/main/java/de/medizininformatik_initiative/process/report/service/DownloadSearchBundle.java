@@ -54,11 +54,15 @@ public class DownloadSearchBundle implements ServiceTask, InitializingBean
 		try
 		{
 			Bundle bundle = searchSearchBundle(api, target, searchBundleIdentifier);
-			api.getDataLogger().log("Search response", bundle);
+			api.getDataLogger().log(
+					"Search response for Task '" + api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task) + "'",
+					bundle);
 
 			Bundle searchBundle = extractSearchBundle(bundle, searchBundleIdentifier,
 					target.getOrganizationIdentifierValue());
-			api.getDataLogger().log("Search Bundle", searchBundle);
+			api.getDataLogger().log(
+					"Search Bundle for Task '" + api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task) + "'",
+					searchBundle);
 
 			variables.setFhirResource(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE, searchBundle);
 		}
