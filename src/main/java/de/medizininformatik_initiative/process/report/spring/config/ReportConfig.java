@@ -49,6 +49,11 @@ public class ReportConfig
 	private boolean dicEmailEnabled;
 
 	@ProcessDocumentation(processNames = {
+			"medizininformatik-initiativede_reportSend" }, description = "The period the process waits to receive the status from the HRP, must be an ISO 8601 time duration pattern")
+	@Value("${de.medizininformatik.initiative.report.dic.status.timer.interval:PT45M}")
+	private String statusTimerInterval;
+
+	@ProcessDocumentation(processNames = {
 			"medizininformatik-initiativede_reportReceive" }, description = "To receive e-mails as hrp, set to `true`")
 	@Value("${de.medizininformatik.initiative.report.hrp.email.enabled:false}")
 	private boolean hrpEmailEnabled;
@@ -91,7 +96,7 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public SelectTargetHrp selectTargetHrp()
 	{
-		return new SelectTargetHrp(hrpIdentifier);
+		return new SelectTargetHrp(statusTimerInterval, hrpIdentifier);
 	}
 
 	@Bean

@@ -53,11 +53,11 @@
       <bpmn:outgoing>Flow_0zp2a01</bpmn:outgoing>
       <bpmn:outgoing>Flow_1fi7ktr</bpmn:outgoing>
     </bpmn:eventBasedGateway>
-    <bpmn:intermediateCatchEvent id="wait" name="wait&#10;(45 minutes)">
+    <bpmn:intermediateCatchEvent id="wait" name="wait&#10;(default 45 minutes)">
       <bpmn:incoming>Flow_1fi7ktr</bpmn:incoming>
       <bpmn:outgoing>Flow_085f33c</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerEventDefinition_0wa7xi7">
-        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT45M</bpmn:timeDuration>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${statusTimerInterval}</bpmn:timeDuration>
       </bpmn:timerEventDefinition>
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_1fi7ktr" sourceRef="Gateway_1uv2c5f" targetRef="wait" />
@@ -144,7 +144,7 @@
       <bpmndi:BPMNShape id="Event_04mygc4_di" bpmnElement="wait">
         <dc:Bounds x="1292" y="192" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1280" y="235" width="62" height="27" />
+          <dc:Bounds x="1285" y="235" width="52" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0tuxyny_di" bpmnElement="Gateway_0tuxyny" isMarkerVisible="true">

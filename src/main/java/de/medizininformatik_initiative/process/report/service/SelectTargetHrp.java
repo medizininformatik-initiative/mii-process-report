@@ -3,6 +3,7 @@ package de.medizininformatik_initiative.process.report.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 import org.hl7.fhir.r4.model.BooleanType;
 import org.hl7.fhir.r4.model.Coding;
@@ -13,6 +14,7 @@ import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
@@ -23,22 +25,35 @@ import dev.dsf.bpe.v2.constants.NamingSystems;
 import dev.dsf.bpe.v2.variables.Target;
 import dev.dsf.bpe.v2.variables.Variables;
 
-public class SelectTargetHrp implements ServiceTask
+public class SelectTargetHrp implements ServiceTask, InitializingBean
 {
 	private static final Logger logger = LoggerFactory.getLogger(SelectTargetHrp.class);
 
+	private static final String ISO_8601_DURATION_STRING = "^P(?:([0-9]+)Y)?(?:([0-9]+)M)?(?:([0-9]+)D)?(T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)(?:[.,]([0-9]{0,9}))?S)?)?$";
+	private static final Pattern ISO_8601_DURATION = Pattern.compile(ISO_8601_DURATION_STRING);
+
+	private final String statusTimerInterval;
 	private final String hrpIdentifierEnvVariable;
 
-	public SelectTargetHrp(String hrpIdentifierEnvVariable)
+	public SelectTargetHrp(String statusTimerInterval, String hrpIdentifierEnvVariable)
 	{
+		this.statusTimerInterval = statusTimerInterval;
 		this.hrpIdentifierEnvVariable = hrpIdentifierEnvVariable;
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception
+	{
+		if (!ISO_8601_DURATION.matcher(statusTimerInterval).matches())
+			throw new IllegalArgumentException("statusTimerInterval '" + statusTimerInterval + "' not in ISO 8601 time duration format");
 	}
 
 	@Override
 	public void execute(ProcessPluginApi api, Variables variables)
 	{
-		Task task = variables.getStartTask();
+		variables.setString(ConstantsReport.BPMN_EXECUTION_VARIABLE_STATUS_TIMER_INTERVAL, statusTimerInterval);
 
+		Task task = variables.getStartTask();
 		Identifier consortiumIdentifier = NamingSystems.OrganizationIdentifier.withValue(
 				ConstantsBase.NAMINGSYSTEM_DSF_ORGANIZATION_IDENTIFIER_MEDICAL_INFORMATICS_INITIATIVE_CONSORTIUM);
 		Coding hrpRole = CodeSystems.OrganizationRole.hrp();
