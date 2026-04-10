@@ -5,6 +5,8 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.Extension;
+import org.hl7.fhir.r4.model.StringType;
 import org.hl7.fhir.r4.model.Task;
 import org.hl7.fhir.r4.model.Type;
 import org.springframework.beans.factory.InitializingBean;
@@ -13,6 +15,7 @@ import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.process.report.util.ReportStatusGenerator;
 import de.medizininformatik_initiative.processes.common.activity.RetryTaskSender;
 import de.medizininformatik_initiative.processes.common.error.MessageEndEventErrorHandlerWithTaskOutput;
+import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
 import dev.dsf.bpe.v2.ProcessPluginApi;
 import dev.dsf.bpe.v2.activity.MessageEndEvent;
 import dev.dsf.bpe.v2.activity.task.TaskSender;
@@ -74,6 +77,10 @@ public class SendReceipt implements MessageEndEvent, InitializingBean
 			coding.setCode(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_ERROR)
 					.setVersion(api.getProcessPluginDefinition().getResourceVersion());
 		}
+
+		parameterComponent.getExtensionsByUrl(ConstantsReport.EXTENSION_REPORT_STATUS_ERROR_URL).stream()
+				.map(Extension::getValue).filter(StringType.class::isInstance).map(StringType.class::cast)
+				.forEach(v -> v.setValue(v.getValue().split(ConstantsBase.EXCEPTION_MESSAGE_DIVIDER, 2)[0]));
 
 		return parameterComponent;
 	}

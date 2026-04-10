@@ -59,14 +59,15 @@ public class DownloadReport implements ServiceTask, InitializingBean
 		}
 		catch (Exception exception)
 		{
+			String message = "Download report failed" + ConstantsBase.EXCEPTION_MESSAGE_DIVIDER
+					+ exception.getMessage();
 			task.setStatus(Task.TaskStatus.FAILED);
 			task.addOutput(
 					statusGenerator.createReportStatusOutput(api.getProcessPluginDefinition().getResourceVersion(),
-							ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, "Download report failed"));
+							ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message));
 			variables.updateTask(task);
 
-			throw new ErrorBoundaryEvent(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR,
-					"Download report failed - " + exception.getMessage());
+			throw new ErrorBoundaryEvent(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR, message);
 		}
 	}
 
