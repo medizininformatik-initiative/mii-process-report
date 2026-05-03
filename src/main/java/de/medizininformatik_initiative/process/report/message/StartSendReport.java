@@ -8,7 +8,7 @@ import org.hl7.fhir.r4.model.Task;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
 import de.medizininformatik_initiative.processes.common.activity.RetryTaskSender;
-import de.medizininformatik_initiative.processes.common.error.MessageIntermediateThrowEventHandlerContinuingProcess;
+import de.medizininformatik_initiative.processes.common.error.MessageIntermediateThrowEventErrorHandlerContinuingProcess;
 import dev.dsf.bpe.v2.ProcessPluginApi;
 import dev.dsf.bpe.v2.activity.MessageIntermediateThrowEvent;
 import dev.dsf.bpe.v2.activity.task.BusinessKeyStrategies;
@@ -50,6 +50,6 @@ public class StartSendReport implements MessageIntermediateThrowEvent
 	@Override
 	public MessageIntermediateThrowEventErrorHandler getErrorHandler()
 	{
-		return new MessageIntermediateThrowEventHandlerContinuingProcess();
+		return new MessageIntermediateThrowEventErrorHandlerContinuingProcess();
 	}
 }
