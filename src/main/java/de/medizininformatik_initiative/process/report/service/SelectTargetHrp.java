@@ -113,8 +113,8 @@ public class SelectTargetHrp implements ServiceTask, InitializingBean
 
 	private String searchHrpIdentifier(ProcessPluginApi api, Identifier consortiumIdentifier, Coding hrpRole, Task task)
 	{
-		logger.info("HRP not defined in Task '{}' or ENV variable - searching HRP for mii-consortium as report target",
-				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
+		logger.info("HRP not defined in Task '{}' or ENV variable{}searching HRP for mii-consortium as report target",
+				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task), ConstantsBase.EXCEPTION_MESSAGE_DIVIDER);
 
 		Organization organization = getHrpOrganization(api, consortiumIdentifier, hrpRole, task);
 		return extractHrpIdentifierFromOrganization(organization);

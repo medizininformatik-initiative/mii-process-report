@@ -6,6 +6,7 @@ import java.util.Objects;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.springframework.beans.factory.InitializingBean;
 
+import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
 import dev.dsf.bpe.v2.ProcessPluginApi;
 import dev.dsf.bpe.v2.ProcessPluginDeploymentListener;
 
@@ -36,8 +37,8 @@ public class ReportProcessPluginDeploymentListener implements ProcessPluginDeplo
 					.orElseThrow(() -> new RuntimeException("DSF FHIR client '" + fhirStoreId + "' not configured"))
 					.getConformance();
 
-			Objects.requireNonNull(conformance,
-					"Connection test for DSF FHIR Client '" + fhirStoreId + "' failed - CapabilityStatement is null");
+			Objects.requireNonNull(conformance, "Connection test for DSF FHIR Client '" + fhirStoreId + "' failed"
+					+ ConstantsBase.EXCEPTION_MESSAGE_DIVIDER + "CapabilityStatement is null");
 		}
 	}
 }

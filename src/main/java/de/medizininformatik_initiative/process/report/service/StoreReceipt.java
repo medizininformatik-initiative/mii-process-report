@@ -96,7 +96,7 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 		String code = status.getCode();
 		String error = output.hasExtension() ? output.getExtensionFirstRep().getValueAsPrimitive().getValueAsString()
 				: "none";
-		String errorLog = error.isBlank() ? "" : " - " + error;
+		String errorLog = error.isBlank() ? "" : ConstantsBase.EXCEPTION_MESSAGE_DIVIDER + error;
 
 		if (ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIPT_OK.equals(code))
 		{

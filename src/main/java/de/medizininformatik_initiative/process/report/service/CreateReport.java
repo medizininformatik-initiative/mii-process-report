@@ -119,8 +119,8 @@ public class CreateReport implements ServiceTask, InitializingBean
 		}
 		catch (Exception exception)
 		{
-			logger.warn("Could not execute report search request '{}' for Task '{}' - {}", urlWithBase, taskReference,
-					exception.getMessage());
+			logger.warn("Could not execute report search request '{}' for Task '{}'{}{}", urlWithBase, taskReference,
+					ConstantsBase.EXCEPTION_MESSAGE_DIVIDER, exception.getMessage());
 
 			OperationOutcome outcome = new OperationOutcome();
 			outcome.addIssue().setSeverity(OperationOutcome.IssueSeverity.ERROR)
