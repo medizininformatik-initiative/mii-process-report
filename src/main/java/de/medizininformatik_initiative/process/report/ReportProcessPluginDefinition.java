@@ -72,13 +72,16 @@ public class ReportProcessPluginDefinition implements ProcessPluginDefinition
 		var vReportStatusReceive = "fhir/ValueSet/report-status-receive.xml";
 		var vReportStatusSend = "fhir/ValueSet/report-status-send.xml";
 
-		return Map.of(ConstantsReport.PROCESS_NAME_FULL_REPORT_AUTOSTART,
-				List.of(aAutostart, cReport, sAutostartStart, sAutostartStop, tAutostartStart, tAutostartStop, vReport),
-				ConstantsReport.PROCESS_NAME_FULL_REPORT_RECEIVE,
-				List.of(aReceive, cReport, cReportStatus, eReportStatusError, nReportIdent, nSearchBundleIdent,
-						sSearchBundle, sSearchBundleResponse, sSend, vReport, vReportStatusReceive),
-				ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND,
-				List.of(aSend, cReport, cReportStatus, eReportStatusError, nReportIdent, nSearchBundleIdent, sReceive,
-						sSearchBundle, sSearchBundleResponse, sSendStart, tSendStart, vReport, vReportStatusSend));
+		return Map
+				.of(ConstantsReport.PROCESS_NAME_FULL_REPORT_AUTOSTART,
+						List.of(aAutostart, cReport, eReportStatusError, sAutostartStart, sAutostartStop,
+								tAutostartStart, tAutostartStop, vReport),
+						ConstantsReport.PROCESS_NAME_FULL_REPORT_RECEIVE,
+						List.of(aReceive, cReport, cReportStatus, eReportStatusError, nReportIdent, nSearchBundleIdent,
+								sSearchBundle, sSearchBundleResponse, sSend, vReport, vReportStatusReceive),
+						ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND,
+						List.of(aSend, cReport, cReportStatus, eReportStatusError, nReportIdent, nSearchBundleIdent,
+								sReceive, sSearchBundle, sSearchBundleResponse, sSendStart, tSendStart, vReport,
+								vReportStatusSend));
 	}
 }

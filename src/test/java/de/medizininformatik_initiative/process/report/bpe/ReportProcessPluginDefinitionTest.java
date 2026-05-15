@@ -22,7 +22,7 @@ public class ReportProcessPluginDefinitionTest
 
 		var reportAutostart = resourcesByProcessId.get(ConstantsReport.PROCESS_NAME_FULL_REPORT_AUTOSTART);
 		assertNotNull(reportAutostart);
-		assertEquals(7, reportAutostart.stream().filter(this::exists).count());
+		assertEquals(8, reportAutostart.stream().filter(this::exists).count());
 
 		var reportReceive = resourcesByProcessId.get(ConstantsReport.PROCESS_NAME_FULL_REPORT_RECEIVE);
 		assertNotNull(reportReceive);
