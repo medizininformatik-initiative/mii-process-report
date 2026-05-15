@@ -124,7 +124,7 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 		String subject = "New successful report in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND + "'";
 		String message = "A new report has been successfully created and retrieved by the HRP '" + hrpIdentifier
 				+ "' with status code '" + code + "' in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND
-				+ "' and Task  '" + taskReference + "'. It can be accessed using the following link:\n" + "- "
+				+ "' and Task '" + taskReference + "'. It can be accessed using the following link:\n" + "- "
 				+ reportLocation;
 
 		mailService.send(subject, message);
