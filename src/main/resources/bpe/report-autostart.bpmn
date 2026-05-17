@@ -89,15 +89,15 @@
       <bpmn:outgoing>Flow_15nc32a</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_15nc32a" sourceRef="Gateway_07jewe6" targetRef="Gateway_1xqxerc" />
-    <bpmn:sequenceFlow id="Flow_1c96glr" sourceRef="Event_0i36vxm" targetRef="Gateway_07jewe6" />
-    <bpmn:intermediateCatchEvent id="Event_0i36vxm" name="first execution">
+    <bpmn:sequenceFlow id="Flow_1c96glr" sourceRef="firstExecution" targetRef="Gateway_07jewe6" />
+    <bpmn:intermediateCatchEvent id="firstExecution" name="first execution">
       <bpmn:incoming>Flow_1olchrl</bpmn:incoming>
       <bpmn:outgoing>Flow_1c96glr</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerEventDefinition_0iz5ubi">
         <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${reportFirstExecution}</bpmn:timeDate>
       </bpmn:timerEventDefinition>
     </bpmn:intermediateCatchEvent>
-    <bpmn:sequenceFlow id="Flow_1olchrl" sourceRef="Gateway_1i1d4e6" targetRef="Event_0i36vxm" />
+    <bpmn:sequenceFlow id="Flow_1olchrl" sourceRef="Gateway_1i1d4e6" targetRef="firstExecution" />
     <bpmn:eventBasedGateway id="Gateway_1i1d4e6">
       <bpmn:incoming>Flow_1natn89</bpmn:incoming>
       <bpmn:outgoing>Flow_1olchrl</bpmn:outgoing>
@@ -184,7 +184,7 @@
       <bpmndi:BPMNShape id="Gateway_07jewe6_di" bpmnElement="Gateway_07jewe6" isMarkerVisible="true">
         <dc:Bounds x="665" y="92" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_15sdy5r_di" bpmnElement="Event_0i36vxm">
+      <bpmndi:BPMNShape id="Event_15sdy5r_di" bpmnElement="firstExecution">
         <dc:Bounds x="672" y="222" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="658" y="264" width="68" height="14" />
