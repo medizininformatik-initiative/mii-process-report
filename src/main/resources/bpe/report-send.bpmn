@@ -5,14 +5,14 @@
       <bpmn:incoming>Flow_0jtrquu</bpmn:incoming>
       <bpmn:outgoing>Flow_0zga5ci</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:endEvent id="EndEvent_1rdxonv">
+    <bpmn:endEvent id="sendEndEvent">
       <bpmn:incoming>Flow_0d1hhpd</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:startEvent id="startSendReport" name="start send report">
       <bpmn:outgoing>Flow_0jtrquu</bpmn:outgoing>
       <bpmn:messageEventDefinition messageRef="Message_1pklz6t" />
     </bpmn:startEvent>
-    <bpmn:sequenceFlow id="Flow_0d1hhpd" sourceRef="storeReceipt" targetRef="EndEvent_1rdxonv" />
+    <bpmn:sequenceFlow id="Flow_0d1hhpd" sourceRef="storeReceipt" targetRef="sendEndEvent" />
     <bpmn:serviceTask id="storeReceipt" name="store receipt" camunda:class="de.medizininformatik_initiative.process.report.service.StoreReceipt">
       <bpmn:incoming>Flow_0lez18n</bpmn:incoming>
       <bpmn:outgoing>Flow_0d1hhpd</bpmn:outgoing>
@@ -88,13 +88,13 @@
     <bpmn:sequenceFlow id="Flow_0l1jgoh" sourceRef="Gateway_1jtn5i5" targetRef="sendReport">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!isDryRun}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:endEvent id="Event_1tgs4a1">
+    <bpmn:endEvent id="dryRunEndEvent">
       <bpmn:incoming>Flow_191va5p</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_0ix00o6" sourceRef="Gateway_1jtn5i5" targetRef="logDryRun">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isDryRun}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_191va5p" sourceRef="logDryRun" targetRef="Event_1tgs4a1" />
+    <bpmn:sequenceFlow id="Flow_191va5p" sourceRef="logDryRun" targetRef="dryRunEndEvent" />
     <bpmn:serviceTask id="logDryRun" name="log dry-run" camunda:class="de.medizininformatik_initiative.process.report.service.LogDryRun">
       <bpmn:incoming>Flow_0ix00o6</bpmn:incoming>
       <bpmn:outgoing>Flow_191va5p</bpmn:outgoing>
@@ -109,7 +109,7 @@
         <dc:Bounds x="309" y="80" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EndEvent_1rdxonv_di" bpmnElement="EndEvent_1rdxonv">
+      <bpmndi:BPMNShape id="EndEvent_1rdxonv_di" bpmnElement="sendEndEvent">
         <dc:Bounds x="1692" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="StartEvent_1dlqln5_di" bpmnElement="startSendReport">
@@ -159,7 +159,7 @@
       <bpmndi:BPMNShape id="Gateway_1jtn5i5_di" bpmnElement="Gateway_1jtn5i5" isMarkerVisible="true">
         <dc:Bounds x="969" y="95" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1tgs4a1_di" bpmnElement="Event_1tgs4a1">
+      <bpmndi:BPMNShape id="Event_1tgs4a1_di" bpmnElement="dryRunEndEvent">
         <dc:Bounds x="1692" y="302" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0bnh8b0_di" bpmnElement="logDryRun">
