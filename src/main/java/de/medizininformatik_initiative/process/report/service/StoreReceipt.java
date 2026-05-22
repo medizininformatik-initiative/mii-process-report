@@ -134,9 +134,9 @@ public class StoreReceipt implements ServiceTask, InitializingBean
 			String error, String hrpIdentifier)
 	{
 		String subject = "Error in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND + "'";
-		String message = "HRP '" + hrpIdentifier + "' could not download or insert new report with reference '"
-				+ reportLocation + "' in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND + "' and Task  '"
-				+ taskReference + "':\n" + "- status code: " + code + "\n" + "- error: " + error;
+		String message = "HRP '" + hrpIdentifier + "' could not download or insert new report from '" + reportLocation
+				+ "' in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_SEND + "' and Task  '" + taskReference
+				+ "':\n" + "- status code: " + code + "\n" + "- error: " + error;
 
 		mailService.send(subject, message);
 	}

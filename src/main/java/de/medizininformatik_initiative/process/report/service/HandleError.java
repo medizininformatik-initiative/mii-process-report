@@ -39,7 +39,7 @@ public class HandleError implements ServiceTask
 				.getString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE_RESPONSE_REFERENCE);
 
 		String subject = "Error in process '" + ConstantsReport.PROCESS_NAME_FULL_REPORT_RECEIVE + "'";
-		String message = "Could not download or insert new report with reference '" + reportLocation + "' in process '"
+		String message = "Could not download or insert new report from '" + reportLocation + "' in process '"
 				+ ConstantsReport.PROCESS_NAME_FULL_REPORT_RECEIVE + "' and Task '"
 				+ api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task) + "' from organization '"
 				+ task.getRequester().getIdentifier().getValue() + "':\n" + "- status code: "

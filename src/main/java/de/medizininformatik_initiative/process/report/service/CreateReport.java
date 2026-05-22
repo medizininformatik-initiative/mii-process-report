@@ -77,6 +77,10 @@ public class CreateReport implements ServiceTask, InitializingBean
 		String reportReference = storeReportBundle(api, reportBundle, target.getOrganizationIdentifierValue(), task);
 		variables.setString(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_SEARCH_BUNDLE_RESPONSE_REFERENCE,
 				reportReference);
+
+		String timerInterval = variables.getString(ConstantsReport.BPMN_EXECUTION_VARIABLE_STATUS_TIMER_INTERVAL);
+		logger.info("Waiting for report receipt for {} in Task '{}'", timerInterval,
+				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
 	}
 
 	private DsfClient getDsfClient(ProcessPluginApi api)
@@ -88,10 +92,6 @@ public class CreateReport implements ServiceTask, InitializingBean
 	private Bundle executeSearchBundle(DsfClient client, Bundle searchBundle, String hrpIdentifier,
 			String taskReference)
 	{
-		logger.info(
-				"Executing search Bundle from HRP '{}' against FHIR store with base URL '{}' for Task '{}' - this could take a while...",
-				hrpIdentifier, client.getBaseUrl(), taskReference);
-
 		Bundle responseBundle = new Bundle();
 		responseBundle.setType(Bundle.BundleType.BATCHRESPONSE);
 
