@@ -61,14 +61,21 @@
       <bpmn:incoming>Flow_0lhidy1</bpmn:incoming>
       <bpmn:outgoing>Flow_077uql6</bpmn:outgoing>
     </bpmn:serviceTask>
+    <bpmn:textAnnotation id="TextAnnotation_1xrax0i">
+      <bpmn:text>All Error Boundery Event Code empty on purpose</bpmn:text>
+    </bpmn:textAnnotation>
   </bpmn:process>
   <bpmn:message id="Message_0u91abp" name="reportSend" />
   <bpmn:message id="Message_1h0kvyq" />
   <bpmn:error id="Error_1j0t9ud" name="target_not_allowed" errorCode="target_not_allowed" />
-  <bpmn:error id="Error_1nrrh7v" name="reportReceiveError" errorCode="reportReceiveError" />
-  <bpmn:error id="Error_1y2mnsr" name="reportReceiveError" errorCode="reportReceiveError" />
+  <bpmn:error id="Error_1nrrh7v" name="reportReceiveError" />
+  <bpmn:error id="Error_1y2mnsr" name="reportReceiveError" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="medizininformatik-initiativede_reportReceive">
+      <bpmndi:BPMNShape id="TextAnnotation_1xrax0i_di" bpmnElement="TextAnnotation_1xrax0i">
+        <dc:Bounds x="362" y="240" width="170" height="42" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="StartEvent_1qh431z_di" bpmnElement="startReceiveReport">
         <dc:Bounds x="173" y="102" width="36" height="36" />
         <bpmndi:BPMNLabel>
