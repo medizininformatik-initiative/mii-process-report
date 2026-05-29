@@ -67,6 +67,10 @@ public class DownloadReport implements ServiceTask, InitializingBean
 							ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message));
 			variables.updateTask(task);
 
+			logger.error(
+					"Downloading report '{}' from organization '{}' in Task '{}' failed - {} - throwing error boundary event",
+					reportReference.getValue(), task.getRequester().getIdentifier().getValue(),
+					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task), exception.getMessage());
 			throw new ErrorBoundaryEvent(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message);
 		}
 	}

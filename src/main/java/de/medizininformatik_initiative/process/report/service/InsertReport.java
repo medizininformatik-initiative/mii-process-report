@@ -88,6 +88,10 @@ public class InsertReport implements ServiceTask, InitializingBean
 							ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message));
 			variables.updateTask(task);
 
+			logger.error(
+					"Inserting report from organization '{}' in Task '{}' failed - {} - throwing error boundary event",
+					task.getRequester().getIdentifier().getValue(),
+					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task), exception.getMessage());
 			throw new ErrorBoundaryEvent(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message);
 		}
 	}

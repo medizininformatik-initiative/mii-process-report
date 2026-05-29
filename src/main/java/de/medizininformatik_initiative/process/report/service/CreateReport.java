@@ -63,6 +63,9 @@ public class CreateReport implements ServiceTask, InitializingBean
 		Target target = variables.getTarget();
 		boolean isDryRun = variables.getBoolean(ConstantsReport.BPMN_EXECUTION_VARIABLE_IS_DRY_RUN);
 
+		logger.info("Executing report search queries for HRP '{}' in Task '{}'",
+				target.getOrganizationIdentifierValue(), api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
+
 		DsfClient client = getDsfClient(api);
 		Bundle responseBundle = executeSearchBundle(client, searchBundle, target.getOrganizationIdentifierValue(),
 				api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task));
