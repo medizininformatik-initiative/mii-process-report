@@ -154,7 +154,7 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public DownloadReport downloadReport()
 	{
-		return new DownloadReport(reportStatusGenerator());
+		return new DownloadReport();
 	}
 
 	@Bean
@@ -168,7 +168,7 @@ public class ReportConfig
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	public HandleError handleError()
 	{
-		return new HandleError(hrpEmailEnabled);
+		return new HandleError(reportStatusGenerator(), hrpEmailEnabled);
 	}
 
 	@Bean

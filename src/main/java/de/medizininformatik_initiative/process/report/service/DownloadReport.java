@@ -1,7 +1,6 @@
 package de.medizininformatik_initiative.process.report.service;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.IdType;
@@ -9,10 +8,8 @@ import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 
 import de.medizininformatik_initiative.process.report.ConstantsReport;
-import de.medizininformatik_initiative.process.report.util.ReportStatusGenerator;
 import de.medizininformatik_initiative.processes.common.util.ConstantsBase;
 import dev.dsf.bpe.v2.ProcessPluginApi;
 import dev.dsf.bpe.v2.activity.ServiceTask;
@@ -22,21 +19,12 @@ import dev.dsf.bpe.v2.error.ErrorBoundaryEvent;
 import dev.dsf.bpe.v2.error.ServiceTaskErrorHandler;
 import dev.dsf.bpe.v2.variables.Variables;
 
-public class DownloadReport implements ServiceTask, InitializingBean
+public class DownloadReport implements ServiceTask
 {
 	private static final Logger logger = LoggerFactory.getLogger(DownloadReport.class);
 
-	private final ReportStatusGenerator statusGenerator;
-
-	public DownloadReport(ReportStatusGenerator statusGenerator)
+	public DownloadReport()
 	{
-		this.statusGenerator = statusGenerator;
-	}
-
-	@Override
-	public void afterPropertiesSet() throws Exception
-	{
-		Objects.requireNonNull(statusGenerator, "reportStatusGenerator");
 	}
 
 	@Override
@@ -59,18 +47,13 @@ public class DownloadReport implements ServiceTask, InitializingBean
 		}
 		catch (Exception exception)
 		{
-			String message = "Download report failed" + ConstantsBase.EXCEPTION_MESSAGE_DIVIDER
-					+ exception.getMessage();
-			task.setStatus(Task.TaskStatus.FAILED);
-			task.addOutput(
-					statusGenerator.createReportStatusOutput(api.getProcessPluginDefinition().getResourceVersion(),
-							ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message));
-			variables.updateTask(task);
-
 			logger.error(
 					"Downloading report '{}' from organization '{}' in Task '{}' failed - {} - throwing error boundary event",
 					reportReference.getValue(), task.getRequester().getIdentifier().getValue(),
 					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task), exception.getMessage());
+
+			String message = "Download report failed" + ConstantsBase.EXCEPTION_MESSAGE_DIVIDER
+					+ exception.getMessage();
 			throw new ErrorBoundaryEvent(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message);
 		}
 	}

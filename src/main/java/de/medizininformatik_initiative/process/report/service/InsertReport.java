@@ -81,17 +81,12 @@ public class InsertReport implements ServiceTask, InitializingBean
 		}
 		catch (Exception exception)
 		{
-			String message = "Insert report failed" + ConstantsBase.EXCEPTION_MESSAGE_DIVIDER + exception.getMessage();
-			task.setStatus(Task.TaskStatus.FAILED);
-			task.addOutput(
-					statusGenerator.createReportStatusOutput(api.getProcessPluginDefinition().getResourceVersion(),
-							ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message));
-			variables.updateTask(task);
-
 			logger.error(
 					"Inserting report from organization '{}' in Task '{}' failed - {} - throwing error boundary event",
 					task.getRequester().getIdentifier().getValue(),
 					api.getTaskHelper().getLocalVersionlessAbsoluteUrl(task), exception.getMessage());
+
+			String message = "Insert report failed" + ConstantsBase.EXCEPTION_MESSAGE_DIVIDER + exception.getMessage();
 			throw new ErrorBoundaryEvent(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message);
 		}
 	}
