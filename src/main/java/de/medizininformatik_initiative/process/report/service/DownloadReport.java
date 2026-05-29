@@ -67,7 +67,7 @@ public class DownloadReport implements ServiceTask, InitializingBean
 							ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message));
 			variables.updateTask(task);
 
-			throw new ErrorBoundaryEvent(ConstantsReport.BPMN_EXECUTION_VARIABLE_REPORT_RECEIVE_ERROR, message);
+			throw new ErrorBoundaryEvent(ConstantsReport.CODESYSTEM_REPORT_STATUS_VALUE_RECEIVE_ERROR, message);
 		}
 	}
 
