@@ -7,10 +7,10 @@
 	<intent value="order"></intent>
 	<authoredOn value="2022-11-16T17:49:15+01:00"></authoredOn>
 	<requester>
-		<type value="Organization"></type>
+		<type value="Practitioner"></type>
 		<identifier>
-			<system value="http://dsf.dev/sid/organization-identifier"></system>
-			<value value="Test_DIC1"></value>
+			<system value="http://dsf.dev/sid/practitioner-identifier"></system>
+			<value value="to-be-replaced-with-certificate-email"></value>
 		</identifier>
 	</requester>
 	<restriction>
