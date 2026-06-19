@@ -66,7 +66,7 @@ public class SetTimer implements ServiceTask
 	{
 		return api.getTaskHelper().getFirstInputParameterValue(variables.getStartTask(),
 				new Coding().setSystem(ConstantsReport.CODESYSTEM_REPORT)
-						.setVersion(api.getProcessPluginDefinition().getVersion())
+						.setVersion(api.getProcessPluginDefinition().getResourceVersion())
 						.setCode(ConstantsReport.CODESYSTEM_REPORT_VALUE_FIRST_EXECUTION),
 				TimeType.class);
 	}

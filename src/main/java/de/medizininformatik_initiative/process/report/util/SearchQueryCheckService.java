@@ -166,7 +166,7 @@ public class SearchQueryCheckService
 
 			for (String v : value.split(","))
 			{
-				map.computeIfAbsent(key, k -> new ArrayList<>()).add(v);
+				map.computeIfAbsent(key, _ -> new ArrayList<>()).add(v);
 			}
 		}
 
