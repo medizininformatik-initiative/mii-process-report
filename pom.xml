@@ -17,7 +17,7 @@
 
 		<dsf.version>2.1.0</dsf.version>
 
-		<miiDevSetup.location>../mii-processes-test-setup</miiDevSetup.location>
+		<miiDevSetup.location>../mii-processes-dev-setup</miiDevSetup.location>
 	</properties>
 
 	<name>mii-process-report</name>
